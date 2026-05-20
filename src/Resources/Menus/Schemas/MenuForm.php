@@ -50,7 +50,7 @@ class MenuForm
                         ->reorderable(true)
                         ->collapsible()
                         ->cloneable()
-                        ->itemLabel(fn (array $state): ?string => $state['label'] ?? null)
+                        ->itemLabel(__('Menu item'))
                         ->addActionLabel(__('Add item'))
                         ->schema(static::itemSchema(allowChildren: true)),
                 ]),
@@ -101,7 +101,7 @@ class MenuForm
                 ->reorderable(true)
                 ->collapsible()
                 ->cloneable()
-                ->itemLabel(fn (array $state): ?string => $state['label'] ?? null)
+                ->itemLabel(__('Sub-item'))
                 ->addActionLabel(__('Add sub-item'))
                 ->schema(static::itemSchema(allowChildren: false));
         }
