@@ -3,15 +3,21 @@
 namespace Ccast\TagixoPrimix;
 
 use Ccast\TagixoPrimix\Resources\LayoutResource;
+use Ccast\TagixoPrimix\Resources\Mails\MailResource;
 use Ccast\TagixoPrimix\Resources\MediaResource;
 use Ccast\TagixoPrimix\Resources\MenuResource;
 use Ccast\TagixoPrimix\Resources\Pages\PageResource;
+use Ccast\TagixoPrimix\Resources\Pdfs\PdfResource;
 use Primix\Contracts\Plugin;
 use Primix\Panel;
 
 class TagixoPrimixPlugin implements Plugin
 {
     private bool $mediaGallery = false;
+
+    private bool $mailTemplates = false;
+
+    private bool $pdfTemplates = false;
 
     public function getId(): string
     {
@@ -30,6 +36,14 @@ class TagixoPrimixPlugin implements Plugin
             $resources[] = MediaResource::class;
         }
 
+        if ($this->mailTemplates) {
+            $resources[] = MailResource::class;
+        }
+
+        if ($this->pdfTemplates) {
+            $resources[] = PdfResource::class;
+        }
+
         $panel->resources($resources);
     }
 
@@ -46,6 +60,20 @@ class TagixoPrimixPlugin implements Plugin
     public function withMediaGallery(bool $enabled = true): static
     {
         $this->mediaGallery = $enabled;
+
+        return $this;
+    }
+
+    public function withMailTemplates(bool $enabled = true): static
+    {
+        $this->mailTemplates = $enabled;
+
+        return $this;
+    }
+
+    public function withPdfTemplates(bool $enabled = true): static
+    {
+        $this->pdfTemplates = $enabled;
 
         return $this;
     }
