@@ -69,8 +69,7 @@ class MenuForm
                 ->label(__('Link type'))
                 ->options(MenuItemTargetType::options())
                 ->default('url')
-                ->required()
-                ->live(),
+                ->required(),
 
             TextInput::make('target_value')
                 ->label(__('Link target'))
