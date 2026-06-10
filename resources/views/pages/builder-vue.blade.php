@@ -33,6 +33,9 @@
         @if ($previewUrl = $this->getPreviewUrl())
             data-preview-url="{{ $previewUrl }}"
         @endif
+        @if ($backUrl = $this->getBackUrl())
+            data-back-url="{{ $backUrl }}"
+        @endif
     >
         <div class="h-full flex items-center justify-center">
             <div class="text-center">

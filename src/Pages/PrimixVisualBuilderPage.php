@@ -97,6 +97,23 @@ abstract class PrimixVisualBuilderPage extends ResourcePage implements BuilderPa
     }
 
     /**
+     * URL the back/exit arrow in the builder sidebar links to.
+     *
+     * Defaults to the resource index page (the list view the user came
+     * from). Override to point elsewhere.
+     */
+    public function getBackUrl(): ?string
+    {
+        $resource = static::getResource();
+
+        if (! $resource) {
+            return null;
+        }
+
+        return $resource::getUrl('index');
+    }
+
+    /**
      * Canvas prop types to exclude from the builder drawer.
      *
      * In the Primix panel context, some canvas prop types are irrelevant

@@ -100,6 +100,13 @@ class PdfsTable
                     ->url(fn (PdfTemplate $record) => PdfResource::getUrl('build', ['record' => $record]))
                     ->openUrlInNewTab(),
 
+                Action::make('download')
+                    ->label(__('Download PDF'))
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->url(fn (PdfTemplate $record) => url('/admin/pdfs/' . $record->getKey() . '/download'))
+                    ->openUrlInNewTab(),
+
                 Action::make('duplicate')
                     ->label(__('Duplicate'))
                     ->icon('heroicon-o-document-duplicate')

@@ -24,6 +24,13 @@ class EditPdf extends EditRecord
                 ->color('primary')
                 ->url(fn () => PdfResource::getUrl('build', ['record' => $this->record])),
 
+            Action::make('downloadPdf')
+                ->label(__('Download PDF'))
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->url(fn () => url('/admin/pdfs/' . $this->record->getKey() . '/download'))
+                ->openUrlInNewTab(),
+
             Action::make('publish')
                 ->label(__('Publish'))
                 ->icon('heroicon-o-check-circle')
