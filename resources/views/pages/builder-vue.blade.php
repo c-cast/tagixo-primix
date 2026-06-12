@@ -7,7 +7,10 @@
 @endphp
 <link rel="stylesheet" href="{{ asset('vendor/tagixo/tagixo.css') }}?v={{ $tagixoAssetVersion('tagixo.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/tagixo/builder-vendor.css') }}?v={{ $tagixoAssetVersion('builder-vendor.css') }}">
-<script type="module" src="{{ asset('vendor/tagixo/builder.js') }}?v={{ $tagixoAssetVersion('builder.js') }}"></script>
+{{-- No ?v= on the module script: lazy chunks import the bare ../builder.js
+     URL, and a query string here would make the browser evaluate builder.js
+     twice (two module instances → two Pinia copies → "reading '_s'" crash). --}}
+<script type="module" src="{{ asset('vendor/tagixo/builder.js') }}"></script>
 
 @push('styles')
     <style id="tagixo-dynamic-styles">{!! $this->getInitialStylesheet() !!}</style>
