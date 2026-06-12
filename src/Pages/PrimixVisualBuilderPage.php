@@ -119,7 +119,7 @@ abstract class PrimixVisualBuilderPage extends ResourcePage implements BuilderPa
      * In the Primix panel context, some canvas prop types are irrelevant
      * because the panel already manages that functionality. For example,
      * form submission actions are handled by the consumer's PHP code
-     * (Resource create/edit, custom Livewire submit), not by the visual
+     * (Resource create/edit, custom LiVue submit), not by the visual
      * builder's SubmitPropType.
      *
      * Override this method to customize which prop types are hidden.

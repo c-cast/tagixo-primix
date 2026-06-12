@@ -7,19 +7,17 @@ use Ccast\Tagixo\Services\BuilderApiService;
 use Ccast\Tagixo\Core\StyleGenerator;
 use LiVue\Component as LiVueComponent;
 use LiVue\Features\SupportHooks\HookRegistry;
-use Livewire\Attributes\On;
 use Primix\Notifications\Notification;
 
 /**
- * Primix/Livewire bridge for InteractsWithVisualBuilder
+ * Primix/LiVue bridge for InteractsWithVisualBuilder
  *
  * Implements the abstract methods from the core trait using Primix Notifications
- * and Livewire dispatch/skipRender. Also re-adds the Livewire #[On] event handlers
- * that delegate to the core builder methods.
+ * and LiVue dispatch/skipRender.
  *
  * Pages using the visual builder should use both traits:
  *   use InteractsWithVisualBuilder;          // core logic
- *   use InteractsWithVisualBuilderPrimix;    // Primix/Livewire bridge
+ *   use InteractsWithVisualBuilderPrimix;    // Primix/LiVue bridge
  */
 trait InteractsWithVisualBuilderPrimix
 {
@@ -104,69 +102,5 @@ trait InteractsWithVisualBuilderPrimix
         $componentCss = StyleGenerator::generateAllStyles($components);
 
         return trim(($globalVarsCss ? $globalVarsCss . "\n" : '') . $componentCss);
-    }
-
-    // =========================================================================
-    // LIVEWIRE EVENT HANDLERS
-    // =========================================================================
-
-    #[On('add-child-component')]
-    public function handleAddChildComponent(string $type, string $parentId): void
-    {
-        $this->addChildComponent($type, $parentId);
-    }
-
-    #[On('open-component-picker')]
-    public function handleOpenComponentPicker(string $parentId): void
-    {
-        $this->openComponentPicker($parentId);
-    }
-
-    #[On('select-component')]
-    public function handleSelectComponent(string $componentId): void
-    {
-        $this->selectComponent($componentId);
-    }
-
-    #[On('duplicate-component')]
-    public function handleDuplicateComponent(string $componentId): void
-    {
-        $this->duplicateComponent($componentId);
-    }
-
-    #[On('remove-component')]
-    public function handleRemoveComponent(string $componentId): void
-    {
-        $this->removeComponent($componentId);
-    }
-
-    #[On('add-root-component')]
-    public function handleAddRootComponent(string $type): void
-    {
-        $this->addRootComponent($type);
-    }
-
-    #[On('save-component-props')]
-    public function handleSaveComponentProps(string $componentId, array $props): void
-    {
-        $this->saveComponentProps($componentId, $props);
-    }
-
-    #[On('save-body-props')]
-    public function handleSaveBodyProps(array $props): void
-    {
-        $this->saveBodyProps($props);
-    }
-
-    #[On('body-props-updated')]
-    public function handleBodyPropsUpdated(array $props): void
-    {
-        $this->updateBodyPropsPreview($props);
-    }
-
-    #[On('drawer-closed')]
-    public function handleDrawerClosed(): void
-    {
-        $this->onDrawerClosed();
     }
 }
