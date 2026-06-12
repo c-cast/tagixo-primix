@@ -2,7 +2,6 @@
     "name": "ccast/tagixo-primix",
     "description": "Primix SDK for Tagixo Visual Builder",
     "type": "library",
-    "version": "1.0",
     "keywords": [
         "laravel",
         "primix",
