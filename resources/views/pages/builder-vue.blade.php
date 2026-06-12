@@ -1,6 +1,13 @@
-<link rel="stylesheet" href="{{ asset('vendor/tagixo/tagixo.css') }}">
-<link rel="stylesheet" href="{{ asset('vendor/tagixo/builder-vendor.css') }}">
-<script type="module" src="{{ asset('vendor/tagixo/builder.js') }}"></script>
+@php
+    $tagixoAssetVersion = static function (string $relative): string {
+        $path = public_path('vendor/tagixo/' . $relative);
+
+        return is_file($path) ? (string) filemtime($path) : (string) time();
+    };
+@endphp
+<link rel="stylesheet" href="{{ asset('vendor/tagixo/tagixo.css') }}?v={{ $tagixoAssetVersion('tagixo.css') }}">
+<link rel="stylesheet" href="{{ asset('vendor/tagixo/builder-vendor.css') }}?v={{ $tagixoAssetVersion('builder-vendor.css') }}">
+<script type="module" src="{{ asset('vendor/tagixo/builder.js') }}?v={{ $tagixoAssetVersion('builder.js') }}"></script>
 
 @push('styles')
     <style id="tagixo-dynamic-styles">{!! $this->getInitialStylesheet() !!}</style>
