@@ -45,7 +45,7 @@
 
     @livewireScripts
 
-    <script type="module" src="{{ asset('vendor/tagixo/builder.js') }}"></script>
+    <script type="module" src="{{ \Ccast\Tagixo\Support\Assets::url('builder.js') }}"></script>
 
     @stack('scripts')
 </body>

@@ -4,6 +4,7 @@ namespace Ccast\TagixoPrimix\Resources\Menus\Concerns;
 
 use Ccast\Tagixo\Models\Menu;
 use Ccast\Tagixo\Models\MenuItem;
+use Ccast\Tagixo\Models\Page;
 use Illuminate\Support\Collection;
 
 trait PersistsMenuItems
@@ -26,10 +27,20 @@ trait PersistsMenuItems
                 continue;
             }
 
+            $targetType = $item['target_type'] ?? 'url';
+
+            // The "Page" link type is authored through a dedicated page picker
+            // (target_page_id). Fold its selection into target_value, which is
+            // the single column MenuItem persists / resolves.
+            $targetValue = $item['target_value'] ?? null;
+            if ($targetType === 'page' && ! empty($item['target_page_id'])) {
+                $targetValue = $item['target_page_id'];
+            }
+
             $payload = [
                 'label' => $label,
-                'target_type' => $item['target_type'] ?? 'url',
-                'target_value' => $item['target_value'] ?? null,
+                'target_type' => $targetType,
+                'target_value' => $targetValue,
                 'target_meta' => $item['target_meta'] ?? null,
                 'new_tab' => (bool) ($item['new_tab'] ?? false),
                 'icon' => $item['icon'] ?? null,
@@ -63,9 +74,20 @@ trait PersistsMenuItems
                 ? $item->target_type->value
                 : (string) $item->target_type;
 
+            // Pre-select the page picker for "Page" items. target_value may be a
+            // numeric id or a slug — resolve both back to the page id the
+            // picker uses as its option value.
+            $targetPageId = null;
+            if ($targetType === 'page' && $item->target_value) {
+                $targetPageId = is_numeric($item->target_value)
+                    ? (int) $item->target_value
+                    : Page::where('slug', $item->target_value)->value('id');
+            }
+
             return [
                 'label' => $item->label,
                 'target_type' => $targetType,
+                'target_page_id' => $targetPageId,
                 'target_value' => $item->target_value,
                 'target_meta' => $item->target_meta,
                 'new_tab' => (bool) $item->new_tab,

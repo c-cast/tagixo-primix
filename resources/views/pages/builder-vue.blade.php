@@ -7,10 +7,11 @@
 @endphp
 <link rel="stylesheet" href="{{ asset('vendor/tagixo/tagixo.css') }}?v={{ $tagixoAssetVersion('tagixo.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/tagixo/builder-vendor.css') }}?v={{ $tagixoAssetVersion('builder-vendor.css') }}">
-{{-- No ?v= on the module script: lazy chunks import the bare ../builder.js
-     URL, and a query string here would make the browser evaluate builder.js
-     twice (two module instances → two Pinia copies → "reading '_s'" crash). --}}
-<script type="module" src="{{ asset('vendor/tagixo/builder.js') }}"></script>
+{{-- Resolved through the build manifest to the content-hashed entry
+     (builder-<hash>.js). The hash IS the cache-bust, so no ?v= query is needed
+     — and because the lazy chunks import the same hashed entry, builder.js is
+     still evaluated exactly once (no duplicate Pinia / "reading '_s'" crash). --}}
+<script type="module" src="{{ \Ccast\Tagixo\Support\Assets::url('builder.js') }}"></script>
 
 @push('styles')
     <style id="tagixo-dynamic-styles">{!! $this->getInitialStylesheet() !!}</style>

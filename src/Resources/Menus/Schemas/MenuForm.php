@@ -3,6 +3,7 @@
 namespace Ccast\TagixoPrimix\Resources\Menus\Schemas;
 
 use Ccast\Tagixo\Enums\MenuItemTargetType;
+use Ccast\Tagixo\Models\Page;
 use Primix\Forms\Components\Fields\Repeater;
 use Primix\Forms\Components\Fields\Select;
 use Primix\Forms\Components\Fields\TextInput;
@@ -71,9 +72,19 @@ class MenuForm
                 ->default('url')
                 ->required(),
 
+            Select::make('target_page_id')
+                ->label(__('Page'))
+                ->options(static::pageOptions())
+                ->searchable()
+                ->preload()
+                ->nullable()
+                ->visibleWhen('target_type', 'page')
+                ->helperText(__('Pick the destination page.')),
+
             TextInput::make('target_value')
                 ->label(__('Link target'))
-                ->helperText(__('URL, page slug or id, route name, or anchor (#section). Depends on link type.'))
+                ->hiddenWhen('target_type', 'page')
+                ->helperText(__('URL, route name, or anchor (#section). Depends on the link type.'))
                 ->nullable(),
 
             Toggle::make('new_tab')
@@ -107,5 +118,24 @@ class MenuForm
         }
 
         return $schema;
+    }
+
+    /**
+     * Options for the page picker: page id => "Title (slug)".
+     *
+     * Stored on the menu item as target_value (which MenuItem::resolveUrl()
+     * accepts as either a numeric id or a slug).
+     *
+     * @return array<int, string>
+     */
+    protected static function pageOptions(): array
+    {
+        return Page::query()
+            ->orderBy('title')
+            ->get(['id', 'title', 'slug'])
+            ->mapWithKeys(fn (Page $page) => [
+                $page->id => trim(($page->title ?: __('Untitled')).' ('.$page->slug.')'),
+            ])
+            ->all();
     }
 }
