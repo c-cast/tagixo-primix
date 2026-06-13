@@ -40,28 +40,13 @@ class PageForm
 
             DatePicker::make('published_at')
                 ->label(__('Publish Date'))
-                ->showTime(),
+                ->showTime()
+                ->helperText(__('Leave empty to publish immediately. Otherwise the page goes live from this date.')),
 
-            Select::make('template')
-                ->label(__('Template'))
-                ->options([
-                    'default' => __('Default'),
-                    'landing' => __('Landing Page'),
-                    'contact' => __('Contact'),
-                    'about'   => __('About'),
-                    'product' => __('Product'),
-                ])
-                ->default('default')
-                ->required(),
-
-            Select::make('theme')
-                ->label(__('Theme'))
-                ->options([
-                    'default' => __('Default Theme'),
-                    'dark'    => __('Dark Theme'),
-                    'minimal' => __('Minimal Theme'),
-                ])
-                ->nullable(),
+            DatePicker::make('published_until')
+                ->label(__('Publish Until'))
+                ->showTime()
+                ->helperText(__('Leave empty to keep it published indefinitely. Otherwise the page is hidden after this date.')),
 
             Select::make('parent_id')
                 ->label(__('Parent Page'))
@@ -74,8 +59,9 @@ class PageForm
                 ->options(fn () => Layout::query()->orderBy('name')->pluck('name', 'id')->all())
                 ->searchable()
                 ->preload()
-                ->nullable()
-                ->helperText(__('If empty, the global layout will be used.')),
+                ->required()
+                ->default(fn () => Layout::global()?->id)
+                ->helperText(__('Other layouts override the header/footer; empty sections fall back to the Global Layout.')),
 
             Textarea::make('excerpt')
                 ->label(__('Excerpt'))

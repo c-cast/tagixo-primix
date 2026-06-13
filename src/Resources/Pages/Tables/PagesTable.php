@@ -38,15 +38,6 @@ class PagesTable
                     ])
                     ->formatStateUsing(fn ($state) => $state instanceof PageStatus ? $state->label() : $state),
 
-                BadgeColumn::make('template')
-                    ->label(__('Template'))
-                    ->colors(['default' => 'info', 'landing' => 'info', 'contact' => 'info', 'about' => 'info', 'product' => 'info']),
-
-                BadgeColumn::make('theme')
-                    ->label(__('Theme'))
-                    ->colors(['default' => 'gray', 'dark' => 'gray', 'minimal' => 'gray'])
-                    ->toggleable(),
-
                 TextColumn::make('layout_label')
                     ->label(__('Layout'))
                     ->getStateUsing(function (Page $record): string {
@@ -106,24 +97,6 @@ class PagesTable
                         'published' => __('Published'),
                         'scheduled' => __('Scheduled'),
                         'archived'  => __('Archived'),
-                    ]),
-
-                SelectFilter::make('template')
-                    ->label(__('Template'))
-                    ->options([
-                        'default' => __('Default'),
-                        'landing' => __('Landing Page'),
-                        'contact' => __('Contact'),
-                        'about'   => __('About'),
-                        'product' => __('Product'),
-                    ]),
-
-                SelectFilter::make('theme')
-                    ->label(__('Theme'))
-                    ->options([
-                        'default' => __('Default Theme'),
-                        'dark'    => __('Dark Theme'),
-                        'minimal' => __('Minimal Theme'),
                     ]),
 
                 SelectFilter::make('layout_id')
