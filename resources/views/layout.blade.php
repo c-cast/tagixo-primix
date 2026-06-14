@@ -45,7 +45,9 @@
 
     @livewireScripts
 
-    <script type="module" src="{{ \Ccast\Tagixo\Support\Assets::url('builder.js') }}"></script>
+    {{-- Stable filename; no ?v= query on the module script (would fork the ES
+         module graph → duplicate Pinia / "reading '_s'" crash). --}}
+    <script type="module" src="{{ asset('vendor/tagixo/builder.js') }}"></script>
 
     @stack('scripts')
 </body>
