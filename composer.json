@@ -28,7 +28,7 @@
     "require": {
         "php": "^8.2",
         "ccast/tagixo": "@dev",
-        "primix/primix": "@dev",
+        "primix/primix": "^0.7",
         "symfony/expression-language": "^6.4|^7.0"
     },
     "require-dev": {
