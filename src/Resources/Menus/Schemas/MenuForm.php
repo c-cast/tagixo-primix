@@ -78,12 +78,12 @@ class MenuForm
                 ->searchable()
                 ->preload()
                 ->nullable()
-                ->visibleWhen('target_type', 'page')
+                ->visible(fn ($get) => $get('target_type') === 'page')
                 ->helperText(__('Pick the destination page.')),
 
             TextInput::make('target_value')
                 ->label(__('Link target'))
-                ->hiddenWhen('target_type', 'page')
+                ->visible(fn ($get) => $get('target_type') !== 'page')
                 ->helperText(__('URL, route name, or anchor (#section). Depends on the link type.'))
                 ->nullable(),
 
