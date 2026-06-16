@@ -3,6 +3,7 @@
 namespace Ccast\TagixoPrimix\Resources\Sliders\Tables;
 
 use Ccast\Tagixo\Models\Slider;
+use Ccast\TagixoPrimix\Resources\Sliders\SliderResource;
 use Primix\Actions\Action;
 use Primix\Resources\Actions\DeleteAction;
 use Primix\Resources\Actions\DeleteBulkAction;
@@ -58,7 +59,8 @@ class SlidersTable
                     ->label(__('Visual Builder'))
                     ->icon('heroicon-o-paint-brush')
                     ->color('primary')
-                    ->url(fn (Slider $record): string => route('builder.sliders.edit', $record->id))
+                    ->url(fn (Slider $record): string => route('builder.sliders.edit', $record->id)
+                        . '?back=' . urlencode(SliderResource::getUrl('index')))
                     ->openUrlInNewTab(),
 
                 EditAction::make(),
