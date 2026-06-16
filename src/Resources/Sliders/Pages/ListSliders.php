@@ -17,7 +17,8 @@ class ListSliders extends ListRecords
                 ->label(__('Create new slider'))
                 ->icon('heroicon-o-plus')
                 ->color('primary')
-                ->url(fn (): string => route('builder.sliders.new'))
+                ->url(fn (): string => route('builder.sliders.new')
+                    . '?back=' . urlencode(SliderResource::getUrl('index')))
                 ->openUrlInNewTab(),
         ];
     }

@@ -18,7 +18,8 @@ class EditForm extends EditRecord
                 ->label(__('Open Visual Builder'))
                 ->icon('heroicon-o-paint-brush')
                 ->color('primary')
-                ->url(fn () => route('builder.forms.edit', $this->record->id))
+                ->url(fn () => route('builder.forms.edit', $this->record->id)
+                    . '?back=' . urlencode(FormResource::getUrl('edit', ['record' => $this->record])))
                 ->openUrlInNewTab(),
 
             DeleteAction::make(),
