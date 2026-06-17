@@ -3,9 +3,13 @@
 namespace Ccast\TagixoPrimix\Resources\Mails\Tables;
 
 use Ccast\Tagixo\Enums\PageStatus;
+use Ccast\Tagixo\Facades\Tagixo;
 use Ccast\Tagixo\Models\MailTemplate;
 use Ccast\TagixoPrimix\Resources\Mails\MailResource;
 use Primix\Actions\Action;
+use Primix\Forms\Components\Fields\Textarea;
+use Primix\Forms\Components\Fields\TextInput;
+use Primix\Notifications\Notification;
 use Primix\Resources\Actions\DeleteAction;
 use Primix\Resources\Actions\DeleteBulkAction;
 use Primix\Resources\Actions\EditAction;
@@ -13,6 +17,7 @@ use Primix\Tables\Columns\BadgeColumn;
 use Primix\Tables\Columns\TextColumn;
 use Primix\Tables\Filters\SelectFilter;
 use Primix\Tables\Table;
+use Throwable;
 
 class MailsTable
 {
@@ -86,6 +91,71 @@ class MailsTable
                     ->color('primary')
                     ->url(fn (MailTemplate $record) => MailResource::getUrl('build', ['record' => $record]))
                     ->openUrlInNewTab(),
+
+                Action::make('sendTest')
+                    ->label(__('Send test'))
+                    ->icon('heroicon-o-paper-airplane')
+                    ->color('gray')
+                    ->form([
+                        TextInput::make('recipient')
+                            ->label(__('Recipient'))
+                            ->email()
+                            ->required()
+                            ->placeholder('you@example.com'),
+
+                        Textarea::make('test_vars')
+                            ->label(__('Test variables (JSON)'))
+                            ->rows(4)
+                            ->placeholder('{"name": "John"}')
+                            ->helperText(__('Optional JSON object of variables interpolated into the template.')),
+                    ])
+                    ->action(function (MailTemplate $record, array $data) {
+                        $vars = [];
+                        $raw = trim((string) ($data['test_vars'] ?? ''));
+
+                        if ($raw !== '') {
+                            $decoded = json_decode($raw, true);
+                            if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
+                                Notification::make()
+                                    ->title(__('Invalid JSON in test variables'))
+                                    ->body(json_last_error_msg())
+                                    ->danger()
+                                    ->send();
+
+                                return;
+                            }
+                            $vars = $decoded;
+                        }
+
+                        $subject = $record->subject ?: '[TEST] '.$record->name;
+
+                        try {
+                            $pending = Tagixo::mail($record->slug)
+                                ->to($data['recipient'])
+                                ->subject($subject);
+
+                            if (! empty($vars)) {
+                                $pending->with($vars);
+                            }
+
+                            $pending->send();
+                        } catch (Throwable $e) {
+                            report($e);
+
+                            Notification::make()
+                                ->title(__('Send failed'))
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+
+                        Notification::make()
+                            ->title(__('Test email sent to :recipient', ['recipient' => $data['recipient']]))
+                            ->success()
+                            ->send();
+                    }),
 
                 Action::make('duplicate')
                     ->label(__('Duplicate'))

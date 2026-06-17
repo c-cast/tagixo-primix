@@ -2,6 +2,7 @@
 
 namespace Ccast\TagixoPrimix\Resources\Mails\Schemas;
 
+use Ccast\TagixoPrimix\Support\SlugInput;
 use Primix\Forms\Components\Fields\DatePicker;
 use Primix\Forms\Components\Fields\Select;
 use Primix\Forms\Components\Fields\Textarea;
@@ -16,7 +17,8 @@ class MailForm
             TextInput::make('name')
                 ->label(__('Name'))
                 ->required()
-                ->maxLength(255),
+                ->maxLength(255)
+                ->watchBlur(SlugInput::from()),
 
             TextInput::make('slug')
                 ->label(__('Slug'))

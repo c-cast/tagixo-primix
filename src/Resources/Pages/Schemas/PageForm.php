@@ -3,6 +3,7 @@
 namespace Ccast\TagixoPrimix\Resources\Pages\Schemas;
 
 use Ccast\Tagixo\Models\Layout;
+use Ccast\TagixoPrimix\Support\SlugInput;
 use Primix\Forms\Components\Fields\DatePicker;
 use Primix\Forms\Components\Fields\FileUpload;
 use Primix\Forms\Components\Fields\Select;
@@ -18,7 +19,8 @@ class PageForm
             TextInput::make('title')
                 ->label(__('Title'))
                 ->required()
-                ->maxLength(255),
+                ->maxLength(255)
+                ->watchBlur(SlugInput::from()),
 
             TextInput::make('slug')
                 ->label(__('Slug'))

@@ -2,6 +2,7 @@
 
 namespace Ccast\TagixoPrimix\Resources\Forms\Schemas;
 
+use Ccast\TagixoPrimix\Support\SlugInput;
 use Primix\Forms\Components\Fields\Select;
 use Primix\Forms\Components\Fields\TextInput;
 use Primix\Forms\Form;
@@ -14,7 +15,8 @@ class FormForm
             TextInput::make('title')
                 ->label(__('Title'))
                 ->required()
-                ->maxLength(255),
+                ->maxLength(255)
+                ->watchBlur(SlugInput::from()),
 
             TextInput::make('slug')
                 ->label(__('Slug'))

@@ -7,7 +7,6 @@ use Primix\Resources\Resource;
 use Primix\Forms\Form;
 use Primix\Tables\Table;
 use Primix\Forms\Components\Fields\TextInput;
-use Primix\Forms\Components\Fields\Toggle;
 use Primix\Tables\Columns\TextColumn;
 use Primix\Tables\Columns\IconColumn;
 use Primix\Actions\Action;
@@ -58,9 +57,9 @@ class LayoutResource extends Resource
                 ->label(__('Name'))
                 ->required()
                 ->maxLength(255),
-            Toggle::make('is_global')
-                ->label(__('Global Layout'))
-                ->helperText(__('When enabled, this layout will be used as default for all pages without a specific layout assigned.')),
+            // The global layout is system-managed (seeded). It is not switchable
+            // from the panel, so the `is_global` toggle is intentionally omitted;
+            // the table still surfaces which layout is global (read-only).
         ]);
     }
 
@@ -95,7 +94,10 @@ class LayoutResource extends Resource
                     ->color('gray')
                     ->url(fn (Layout $record) => static::getUrl('build', ['record' => $record, 'section' => 'footer'])),
                 EditAction::make(),
-                DeleteAction::make(),
+                // The global layout is the system base and cannot be deleted
+                // (enforced in Layout::booted()); hide the action for it too.
+                DeleteAction::make()
+                    ->hidden(fn (Layout $record): bool => $record->is_global),
             ]);
     }
 

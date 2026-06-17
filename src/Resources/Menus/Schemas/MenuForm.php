@@ -4,6 +4,7 @@ namespace Ccast\TagixoPrimix\Resources\Menus\Schemas;
 
 use Ccast\Tagixo\Enums\MenuItemTargetType;
 use Ccast\Tagixo\Models\Page;
+use Ccast\TagixoPrimix\Support\SlugInput;
 use Primix\Forms\Components\Fields\Repeater;
 use Primix\Forms\Components\Fields\Select;
 use Primix\Forms\Components\Fields\TextInput;
@@ -22,7 +23,8 @@ class MenuForm
                     TextInput::make('name')
                         ->label(__('Name'))
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->watchBlur(SlugInput::from()),
 
                     TextInput::make('slug')
                         ->label(__('Slug'))
