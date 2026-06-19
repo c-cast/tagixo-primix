@@ -156,7 +156,7 @@ class BuildPage extends PrimixVisualBuilderPage
             'label' => __($section === 'header' ? 'Header' : 'Footer'),
             'available' => $sourceLayout !== null && (($sourceLayout->getAttribute($htmlField) ?? '') !== '' || $structure['components'] !== []),
             'editable' => $editableLayout !== null,
-            'previewHtml' => $sourceLayout?->getAttribute($htmlField) ?? '',
+            'previewHtml' => $this->hydrateSectionPreviewHtml((string) ($sourceLayout?->getAttribute($htmlField) ?? ''), $structure),
             'previewCss' => $this->composeLayoutPreviewCss($sourceLayout?->getAttribute($cssField)),
             'structure' => $structure,
             'sourceKind' => $editableKind,
@@ -166,6 +166,26 @@ class BuildPage extends PrimixVisualBuilderPage
             'isFallback' => $sourceLayout !== null && $assignedLayout !== null && $sourceLayout->id !== $assignedLayout->id,
             'saveUrl' => $editableLayout ? route('tagixo.layouts.sections.save', ['id' => $editableLayout->id, 'section' => $section]) : null,
         ];
+    }
+
+    /**
+     * The layout's `*_rendered_html` is the frontend cache: live modules (e.g.
+     * Menu) are baked as <!--TGX_LIVE:nodeId--> markers, hydrated only at
+     * frontend render time. The builder's header/footer preview reads this
+     * cache directly, so without hydrating it the marker collapses to an empty
+     * wrapper and the header/footer looks blank in the page builder. Resolve
+     * the markers here using the section's own stored content tree (mirrors
+     * \Ccast\Tagixo\Builder\Types\DefaultPageType::hydratePreviewHtml).
+     *
+     * @param  array{body: mixed, components: mixed}  $structure
+     */
+    protected function hydrateSectionPreviewHtml(string $html, array $structure): string
+    {
+        if ($html === '' || ! str_contains($html, '<!--TGX_LIVE:')) {
+            return $html;
+        }
+
+        return app(PageRenderer::class)->hydrateLiveModules($html, $structure);
     }
 
     protected function resolveLayoutSectionSource(?Layout $assignedLayout, ?Layout $globalLayout, string $section): array
