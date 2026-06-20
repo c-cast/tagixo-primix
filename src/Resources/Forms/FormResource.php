@@ -63,6 +63,9 @@ class FormResource extends Resource
         return [
             'index' => ListForms::route('/'),
             'edit'  => EditForm::route('/{record}/edit'),
+            // Standalone preview of an app-target form, rendered as a real Primix
+            // form (native Tabs/Wizard). Tagixo core delegates here for app forms.
+            'preview-app' => \Ccast\TagixoPrimix\Resources\Forms\Pages\PreviewAppForm::route('/{record}/preview-app'),
         ];
     }
 }
