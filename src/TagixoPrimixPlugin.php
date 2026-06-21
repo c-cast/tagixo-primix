@@ -6,6 +6,7 @@ use Ccast\TagixoPrimix\Resources\LayoutResource;
 use Ccast\TagixoPrimix\Resources\Forms\FormResource;
 use Ccast\TagixoPrimix\Resources\Mails\MailResource;
 use Ccast\TagixoPrimix\Resources\MediaResource;
+use Ccast\TagixoPrimix\Pages\SiteScriptsPage;
 use Ccast\TagixoPrimix\Resources\MenuResource;
 use Ccast\TagixoPrimix\Resources\Pages\PageResource;
 use Ccast\TagixoPrimix\Resources\Pdfs\PdfResource;
@@ -49,6 +50,10 @@ class TagixoPrimixPlugin implements Plugin
         }
 
         $panel->resources($resources);
+
+        $panel->pages([
+            SiteScriptsPage::class,
+        ]);
     }
 
     public function boot(Panel $panel): void
