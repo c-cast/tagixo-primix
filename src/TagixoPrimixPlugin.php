@@ -2,14 +2,15 @@
 
 namespace Ccast\TagixoPrimix;
 
-use Ccast\TagixoPrimix\Resources\LayoutResource;
+use Ccast\TagixoPrimix\Pages\SiteScriptsPage;
 use Ccast\TagixoPrimix\Resources\Forms\FormResource;
+use Ccast\TagixoPrimix\Resources\LayoutResource;
 use Ccast\TagixoPrimix\Resources\Mails\MailResource;
 use Ccast\TagixoPrimix\Resources\MediaResource;
-use Ccast\TagixoPrimix\Pages\SiteScriptsPage;
 use Ccast\TagixoPrimix\Resources\MenuResource;
 use Ccast\TagixoPrimix\Resources\Pages\PageResource;
 use Ccast\TagixoPrimix\Resources\Pdfs\PdfResource;
+use Ccast\TagixoPrimix\Resources\Popups\PopupResource;
 use Ccast\TagixoPrimix\Resources\Sliders\SliderResource;
 use Primix\Contracts\Plugin;
 use Primix\Panel;
@@ -35,6 +36,7 @@ class TagixoPrimixPlugin implements Plugin
             MenuResource::class,
             FormResource::class,
             SliderResource::class,
+            PopupResource::class,
         ];
 
         if ($this->mediaGallery) {
