@@ -135,31 +135,26 @@
             return
         }
 
-        await livue.call('saveFromVue', [e.detail.structure]);
-    });
-
-    window.addEventListener('tagixo:save-global-variables', async (e) => {
-        const livue = resolveBuilderLivueBridge()
-
-        if (! livue?.call) {
+        // Server-side success/failure is reported via livue.on('tagixo:saved' /
+        // 'tagixo:save-error') below. Guard the transport too: if the call itself
+        // rejects (network / 419 / 500 before the component can emit its event),
+        // surface it so a failed save can never be swallowed and silently lose
+        // the user's work.
+        try {
+            await livue.call('saveFromVue', [e.detail.structure]);
+        } catch (error) {
             window.dispatchEvent(new CustomEvent('tagixo:save-error', {
-                detail: { message: '{{ __("Builder bridge unavailable") }}' }
+                detail: { message: error?.message || '{{ __("Error while saving") }}' }
             }))
-            return
         }
-
-        await livue.call('saveGlobalVariables', [e.detail.variables]);
     });
 
-    window.addEventListener('tagixo:get-component-defaults', async (e) => {
-        const livue = resolveBuilderLivueBridge()
-        const defaults = livue?.call
-            ? await livue.call('getComponentDefaults', [e.detail.type])
-            : []
-        window.dispatchEvent(new CustomEvent('tagixo:component-defaults', {
-            detail: { type: e.detail.type, defaults: defaults }
-        }));
-    });
+    // NOTE: global variables now persist from inside the builder itself
+    // (useGlobalVariables.saveGlobalVariables POSTs to
+    // /tagixo/builder/global-variables), and component defaults are delivered
+    // via the bootstrap payload — so the former `tagixo:save-global-variables`
+    // and `tagixo:get-component-defaults` listeners were dead here and have been
+    // removed.
 
     window.addEventListener('tagixo:structure-changed', async (e) => {
         refreshBuilderStyles(e.detail.structure);
