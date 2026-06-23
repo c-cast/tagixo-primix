@@ -4,6 +4,7 @@ namespace Ccast\TagixoPrimix;
 
 use Ccast\TagixoPrimix\Pages\SiteScriptsPage;
 use Ccast\TagixoPrimix\Resources\Forms\FormResource;
+use Ccast\TagixoPrimix\Resources\GlobalBlocks\GlobalBlockResource;
 use Ccast\TagixoPrimix\Resources\LayoutResource;
 use Ccast\TagixoPrimix\Resources\Mails\MailResource;
 use Ccast\TagixoPrimix\Resources\MediaResource;
@@ -37,6 +38,7 @@ class TagixoPrimixPlugin implements Plugin
             FormResource::class,
             SliderResource::class,
             PopupResource::class,
+            GlobalBlockResource::class,
         ];
 
         if ($this->mediaGallery) {
