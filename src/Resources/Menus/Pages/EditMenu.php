@@ -3,8 +3,10 @@
 namespace Ccast\TagixoPrimix\Resources\Menus\Pages;
 
 use Ccast\Tagixo\Models\Menu;
+use Ccast\TagixoPrimix\Resources\Menus\Concerns\ManagesMenuTree;
 use Ccast\TagixoPrimix\Resources\Menus\Concerns\PersistsMenuItems;
 use Ccast\TagixoPrimix\Resources\MenuResource;
+use Ccast\TagixoPrimix\Support\MenuTreeStructure;
 use Illuminate\Validation\Rule;
 use Primix\Notifications\Notification;
 use Primix\Resources\Actions\DeleteAction;
@@ -12,6 +14,7 @@ use Primix\Resources\Pages\EditRecord;
 
 class EditMenu extends EditRecord
 {
+    use ManagesMenuTree;
     use PersistsMenuItems;
 
     protected static ?string $resource = MenuResource::class;
@@ -27,7 +30,9 @@ class EditMenu extends EditRecord
     {
         /** @var Menu $record */
         $record = $this->record;
-        $data['items'] = $this->menuItemsToTree($record);
+        // Persistence stores a nested tree; the tree field edits a flat list
+        // with per-item depth. Flatten on the way in.
+        $data['items'] = MenuTreeStructure::treeToFlat($this->menuItemsToTree($record));
 
         return $data;
     }
@@ -57,7 +62,10 @@ class EditMenu extends EditRecord
 
         $this->record->update($attributeData);
 
-        $this->persistMenuItems($this->record, is_array($items) ? $items : []);
+        // Rebuild the nested tree from the flat (depth-carrying) editor state
+        // before handing it to the persistence layer.
+        $tree = MenuTreeStructure::flatToTree(is_array($items) ? $items : []);
+        $this->persistMenuItems($this->record, $tree);
 
         $this->record->refresh();
         $this->data = $form->fillWithRelationships(

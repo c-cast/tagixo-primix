@@ -3,8 +3,10 @@
 namespace Ccast\TagixoPrimix\Resources\Menus\Pages;
 
 use Ccast\Tagixo\Models\Menu;
+use Ccast\TagixoPrimix\Resources\Menus\Concerns\ManagesMenuTree;
 use Ccast\TagixoPrimix\Resources\Menus\Concerns\PersistsMenuItems;
 use Ccast\TagixoPrimix\Resources\MenuResource;
+use Ccast\TagixoPrimix\Support\MenuTreeStructure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
 use Primix\Notifications\Notification;
@@ -12,6 +14,7 @@ use Primix\Resources\Pages\CreateRecord;
 
 class CreateMenu extends CreateRecord
 {
+    use ManagesMenuTree;
     use PersistsMenuItems;
 
     protected static ?string $resource = MenuResource::class;
@@ -47,7 +50,10 @@ class CreateMenu extends CreateRecord
         /** @var Menu $menu */
         $menu = Menu::create($attributeData);
 
-        $this->persistMenuItems($menu, is_array($items) ? $items : []);
+        // The tree field state is a flat depth-carrying list; rebuild the nested
+        // tree the persistence layer expects.
+        $tree = MenuTreeStructure::flatToTree(is_array($items) ? $items : []);
+        $this->persistMenuItems($menu, $tree);
 
         Notification::make()
             ->title(__('primix::panel.notifications.created'))
