@@ -47,80 +47,6 @@ trait ManagesMenuTree
         $this->setMenuTreeItems($items);
     }
 
-    /** Move an item (with its subtree) above its previous sibling. */
-    public function menuTreeMoveUp(int $index): void
-    {
-        $items = $this->menuTreeItems();
-        $prev = $this->previousSiblingIndex($items, $index);
-
-        if ($prev === null) {
-            return;
-        }
-
-        $length = $this->blockLength($items, $index);
-        $block = array_splice($items, $index, $length);
-        array_splice($items, $prev, 0, $block);
-        $this->setMenuTreeItems($items);
-    }
-
-    /** Move an item (with its subtree) below its next sibling. */
-    public function menuTreeMoveDown(int $index): void
-    {
-        $items = $this->menuTreeItems();
-
-        if (! array_key_exists($index, $items)) {
-            return;
-        }
-
-        $depth = (int) ($items[$index]['depth'] ?? 0);
-        $length = $this->blockLength($items, $index);
-        $next = $index + $length;
-
-        // A next sibling exists only if the following block is at the same depth.
-        if (! array_key_exists($next, $items) || (int) ($items[$next]['depth'] ?? 0) !== $depth) {
-            return;
-        }
-
-        $nextLength = $this->blockLength($items, $next);
-        $block = array_splice($items, $index, $length);
-        array_splice($items, $index + $nextLength, 0, $block);
-        $this->setMenuTreeItems($items);
-    }
-
-    /** Nest an item (with its subtree) under its previous sibling. */
-    public function menuTreeIndent(int $index): void
-    {
-        $items = $this->menuTreeItems();
-
-        if ($this->previousSiblingIndex($items, $index) === null) {
-            return;
-        }
-
-        $length = $this->blockLength($items, $index);
-        for ($k = $index; $k < $index + $length; $k++) {
-            $items[$k]['depth'] = (int) ($items[$k]['depth'] ?? 0) + 1;
-        }
-
-        $this->setMenuTreeItems($items);
-    }
-
-    /** Un-nest an item (with its subtree) by one level. */
-    public function menuTreeOutdent(int $index): void
-    {
-        $items = $this->menuTreeItems();
-
-        if (! array_key_exists($index, $items) || (int) ($items[$index]['depth'] ?? 0) <= 0) {
-            return;
-        }
-
-        $length = $this->blockLength($items, $index);
-        for ($k = $index; $k < $index + $length; $k++) {
-            $items[$k]['depth'] = max(0, (int) ($items[$k]['depth'] ?? 0) - 1);
-        }
-
-        $this->setMenuTreeItems($items);
-    }
-
     /**
      * Apply a new order coming from the drag gesture. The client sends only
      * {index, depth} pairs (original positions + target depth); we rebuild the
@@ -233,35 +159,5 @@ trait ManagesMenuTree
         }
 
         return $length;
-    }
-
-    /**
-     * Index of the previous sibling (same depth, same parent) of $index, or
-     * null if it is the first child of its parent.
-     *
-     * @param  array<int, array<string, mixed>>  $items
-     */
-    protected function previousSiblingIndex(array $items, int $index): ?int
-    {
-        if (! array_key_exists($index, $items)) {
-            return null;
-        }
-
-        $depth = (int) ($items[$index]['depth'] ?? 0);
-
-        for ($j = $index - 1; $j >= 0; $j--) {
-            $dj = (int) ($items[$j]['depth'] ?? 0);
-
-            if ($dj < $depth) {
-                return null; // reached the parent → no previous sibling
-            }
-
-            if ($dj === $depth) {
-                return $j;
-            }
-            // deeper → still inside the previous sibling's subtree, keep scanning
-        }
-
-        return null;
     }
 }

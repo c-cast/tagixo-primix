@@ -10,10 +10,19 @@
     <div class="menu-tree-list flex flex-col" data-menu-tree-list>
         <template v-for="(item, i) in {{ $statePath }}" :key="i">
             <div
-                class="menu-tree-row group flex items-center gap-2 py-2 pe-2 ps-3 mb-1 rounded-md bg-[var(--p-content-background)] ring-1 ring-[var(--p-content-border-color)]"
+                class="menu-tree-row group flex items-center gap-2 mb-1 rounded-md bg-[var(--p-content-background)] ring-1 ring-[var(--p-content-border-color)]"
                 :data-index="i"
                 :data-depth="item.depth || 0"
-                :style="{ marginInlineStart: ((item.depth || 0) * 1.75) + 'rem' }"
+                {{-- Paddings inline (not Tailwind classes): the prebuilt Primix admin CSS
+                     bundle doesn't include every spacing utility, so ps-4/py-2.5 silently
+                     no-op. Inline styles are bundle-independent. --}}
+                :style="{
+                    marginInlineStart: ((item.depth || 0) * 1.75) + 'rem',
+                    paddingInlineStart: '1rem',
+                    paddingInlineEnd: '0.5rem',
+                    paddingTop: '0.5rem',
+                    paddingBottom: '0.5rem',
+                }"
             >
                 <span
                     class="menu-tree-handle cursor-move text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 shrink-0"
@@ -40,26 +49,6 @@
                 ></p-toggle-switch>
 
                 <div class="menu-tree-actions flex items-center gap-0.5 shrink-0">
-                    <p-button
-                        icon="pi pi-angle-left" text rounded size="small" severity="secondary"
-                        v-tooltip.top="'{{ __('Outdent') }}'"
-                        @click="menuTreeOutdent(i)"
-                    ></p-button>
-                    <p-button
-                        icon="pi pi-angle-right" text rounded size="small" severity="secondary"
-                        v-tooltip.top="'{{ __('Indent') }}'"
-                        @click="menuTreeIndent(i)"
-                    ></p-button>
-                    <p-button
-                        icon="pi pi-arrow-up" text rounded size="small" severity="secondary"
-                        v-tooltip.top="'{{ __('Move up') }}'"
-                        @click="menuTreeMoveUp(i)"
-                    ></p-button>
-                    <p-button
-                        icon="pi pi-arrow-down" text rounded size="small" severity="secondary"
-                        v-tooltip.top="'{{ __('Move down') }}'"
-                        @click="menuTreeMoveDown(i)"
-                    ></p-button>
                     <p-button
                         icon="pi pi-pencil" text rounded size="small"
                         v-tooltip.top="'{{ __('Edit') }}'"
@@ -188,6 +177,31 @@ const menuTreeSnapshot = (list) =>
         depth: Number(row.dataset.depth) || 0,
     }));
 
+// Resolve the LiVue component that OWNS the menu tree, so server method calls
+// land on the right page component. The `livue` injected into this @script and
+// `window.livue` resolve to the wrong instance here (e.g. primix-topbar), so we
+// match the list's nearest [data-livue-id] ancestor against LiVue.all().
+const menuTreeBridge = (list) => {
+    const rootEl = list && list.closest('[data-livue-id]');
+    const rootId = rootEl && rootEl.getAttribute('data-livue-id');
+    const api = window.LiVue;
+
+    if (rootId && api && typeof api.all === 'function') {
+        const all = api.all();
+        const arr = Array.isArray(all) ? all : Object.values(all || {});
+        const comp = arr.find((c) => c && (
+            c.componentId === rootId ||
+            (c.el && c.el.getAttribute && c.el.getAttribute('data-livue-id') === rootId)
+        ));
+        if (comp) {
+            return (comp._rootLivue && comp._rootLivue.call) ? comp._rootLivue : comp;
+        }
+    }
+
+    if (typeof livue !== 'undefined' && livue && livue.call) return livue;
+    return window.livue;
+};
+
 const initMenuTreeSortable = () => {
     const list = document.querySelector('[data-menu-tree-list]');
 
@@ -196,57 +210,148 @@ const initMenuTreeSortable = () => {
     }
 
     let snapshot = [];
+    let domOrder = [];
     let dragPos = 0;
     let dragLen = 1;
+    let dragItem = null;
+    let startX = null;
+    let startDepth = 0;
+    let candidateDepth = 0;
+
+    // Max depth allowed at the dragged row's CURRENT drop position: one deeper
+    // than the row immediately above it (you can be its child or any shallower
+    // sibling); 0 at the very top.
+    const maxDepthAtDragPosition = () => {
+        const rows = Array.from(list.querySelectorAll('.menu-tree-row'));
+        const idx = rows.indexOf(dragItem);
+        const prev = idx > 0 ? rows[idx - 1] : null;
+        return prev ? (Number(prev.dataset.depth) || 0) + 1 : 0;
+    };
+
+    // Live horizontal tracking: drag right/left to pick the target depth (WP
+    // style). The dragged row indents in real time as a ghost of where/at what
+    // level it will land — same level vs sub-item.
+    const onMenuTreeDragMove = (e) => {
+        if (!dragItem) return;
+        const x = e.clientX != null ? e.clientX
+            : (e.touches && e.touches[0] ? e.touches[0].clientX : null);
+        if (x == null) return;
+        if (startX === null) startX = x;
+
+        const maxDepth = maxDepthAtDragPosition();
+        let d = startDepth + Math.round((x - startX) / MENU_TREE_INDENT_STEP);
+        d = Math.max(0, Math.min(d, maxDepth));
+        candidateDepth = d;
+
+        dragItem.style.marginInlineStart = (d * 1.75) + 'rem';
+    };
+
+    const MENU_TREE_MOVE_EVENTS = ['dragover', 'pointermove', 'touchmove'];
 
     list.__menuTreeSortable = window.Sortable.create(list, {
         handle: '.menu-tree-handle',
         animation: 150,
+        dataIdAttr: 'data-index',
+        ghostClass: 'menu-tree-ghost',
         onStart: (evt) => {
+            // Option callbacks get SortableJS's own event (evt.target is the
+            // dragged item, not the list), so grab the instance from the closure.
+            const instance = list.__menuTreeSortable || window.Sortable.get(list);
             snapshot = menuTreeSnapshot(list);
+            domOrder = instance ? instance.toArray() : [];
             dragPos = evt.oldIndex;
-            const depth = snapshot[dragPos] ? snapshot[dragPos].depth : 0;
+            startDepth = snapshot[dragPos] ? snapshot[dragPos].depth : 0;
+            candidateDepth = startDepth;
+            dragItem = evt.item;
+            startX = null;
+
             dragLen = 1;
             for (let j = dragPos + 1; j < snapshot.length; j++) {
-                if (snapshot[j].depth > depth) dragLen++;
+                if (snapshot[j].depth > startDepth) dragLen++;
                 else break;
             }
+
+            // Make the dragged row read as a drop-preview ghost.
+            dragItem.style.outline = '2px dashed var(--p-primary-color, #6366f1)';
+            dragItem.style.outlineOffset = '-2px';
+            dragItem.style.opacity = '0.85';
+
+            MENU_TREE_MOVE_EVENTS.forEach((t) => document.addEventListener(t, onMenuTreeDragMove, true));
         },
         onEnd: (evt) => {
-            const bridge = (typeof livue !== 'undefined' && livue) || window.livue;
-            if (!bridge || !bridge.call) return;
+            MENU_TREE_MOVE_EVENTS.forEach((t) => document.removeEventListener(t, onMenuTreeDragMove, true));
 
+            if (dragItem) {
+                dragItem.style.marginInlineStart = '';
+                dragItem.style.outline = '';
+                dragItem.style.outlineOffset = '';
+                dragItem.style.opacity = '';
+            }
+
+            const instance = list.__menuTreeSortable || window.Sortable.get(list);
+
+            // New sequence of original positions after SortableJS moved the single
+            // dragged row (a dragged parent's children are still scattered). Read
+            // BEFORE reverting the DOM.
+            const newOrder = instance ? instance.toArray().map(Number) : [];
+
+            // Revert the DOM so Vue's v-for vdom stays consistent; the server
+            // reorder + re-render is the source of truth.
+            if (instance && domOrder.length) {
+                instance.sort(domOrder, false);
+            }
+
+            const bridge = menuTreeBridge(list);
+            if (!bridge || !bridge.call) { dragItem = null; return; }
+
+            // The dragged block = the item plus its descendants (contiguous in the
+            // original snapshot). Walk the new sequence and reassemble: at the
+            // dragged row's new spot splice the whole block in, skip its children
+            // wherever SortableJS left them. This keeps subtrees intact for any
+            // depth / item count (no fragile newIndex math).
             const block = snapshot.slice(dragPos, dragPos + dragLen);
-            const rest = snapshot.slice(0, dragPos).concat(snapshot.slice(dragPos + dragLen));
+            const inBlock = new Set();
+            for (let k = 0; k < dragLen; k++) inBlock.add(dragPos + k);
 
-            let target = evt.newIndex;
-            if (evt.newIndex > evt.oldIndex) target = evt.newIndex - dragLen + 1;
-            target = Math.max(0, Math.min(target, rest.length));
+            const result = [];
+            for (const pos of newOrder) {
+                if (pos === dragPos) {
+                    for (const b of block) result.push(b);
+                } else if (! inBlock.has(pos)) {
+                    result.push(snapshot[pos]);
+                }
+            }
 
-            const rect = list.getBoundingClientRect();
-            const oe = evt.originalEvent || {};
-            const touch = oe.changedTouches && oe.changedTouches[0];
-            const clientX = (oe.clientX != null ? oe.clientX : (touch ? touch.clientX : rect.left));
+            // Clamp the depth the user picked horizontally to what's valid at the
+            // final position (at most one deeper than the row above the block).
+            const at = result.indexOf(block[0]);
+            const above = at > 0 ? result[at - 1] : null;
+            const maxDepth = above ? above.depth + 1 : 0;
+            const finalDepth = Math.max(0, Math.min(candidateDepth, maxDepth));
 
-            let desired = Math.round((clientX - rect.left) / MENU_TREE_INDENT_STEP);
-            const maxDepth = target > 0 ? rest[target - 1].depth + 1 : 0;
-            desired = Math.max(0, Math.min(desired, maxDepth));
-
-            const delta = desired - (block[0] ? block[0].depth : 0);
+            const delta = finalDepth - (block[0] ? block[0].depth : 0);
             block.forEach((b) => { b.depth = Math.max(0, b.depth + delta); });
 
-            const order = rest
-                .slice(0, target)
-                .concat(block, rest.slice(target))
-                .map((o) => ({ index: o.index, depth: o.depth }));
-
-            bridge.call('menuTreeReorder', [order]);
+            dragItem = null;
+            bridge.call('menuTreeReorder', [result.map((o) => ({ index: o.index, depth: o.depth }))]);
         },
     });
 };
 
-onMounted(() => { initMenuTreeSortable(); });
-document.addEventListener('livue:navigated', initMenuTreeSortable);
+// NB: LiVue's @script runs in setup() but `onMounted` does not reliably fire
+// here, and LiVue re-renders can replace the list element (dropping the binding),
+// so a persistent watcher (re)binds whenever the current list lacks a Sortable.
+const ensureMenuTreeSortable = () => {
+    const list = document.querySelector('[data-menu-tree-list]');
+    if (list && window.Sortable && !list.__menuTreeSortable) {
+        initMenuTreeSortable();
+    }
+};
+ensureMenuTreeSortable();
+if (!window.__menuTreeWatcher) {
+    window.__menuTreeWatcher = setInterval(ensureMenuTreeSortable, 300);
+}
+document.addEventListener('livue:navigated', ensureMenuTreeSortable);
 
 return {};
 @endscript

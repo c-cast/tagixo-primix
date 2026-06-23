@@ -46,7 +46,7 @@ class MenuForm
                 ->schema([
                     MenuTreeField::make('items')
                         ->label(__('Menu items'))
-                        ->helperText(__('Drag to reorder, drag right/left (or use the arrows) to change level, and click the pencil to edit an item. Supports unlimited nesting.')),
+                        ->helperText(__('Drag to reorder; drag right to nest as a sub-item, left to outdent. Click the pencil to edit. Supports unlimited nesting.')),
                 ]),
         ]);
     }
