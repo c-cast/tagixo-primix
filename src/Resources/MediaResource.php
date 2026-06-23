@@ -139,7 +139,8 @@ class MediaResource extends Resource
             ->bulkActions([
                 DeleteBulkAction::make()->requiresConfirmation(),
             ])
-            ->paginated([25, 50, 100]);
+            ->perPageOptions([25, 50, 100])
+            ->defaultPerPage(25);
     }
 
     public static function getPages(): array

@@ -8,7 +8,7 @@ use Primix\PanelProvider;
 
 /**
  * Test panel that mirrors the consumer's admin setup: registers Tagixo's
- * Primix plugin with mail + pdf templates enabled. Naming `AdminPanelProvider`
+ * Primix plugin with media gallery + mail + pdf templates enabled. Naming `AdminPanelProvider`
  * gives the panel id `admin`, so the routes resolve to `primix.admin.*` as
  * referenced by the migrated tests.
  */
@@ -21,6 +21,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->plugin(
                 TagixoPrimixPlugin::make()
+                    ->withMediaGallery()
                     ->withMailTemplates()
                     ->withPdfTemplates()
             );
