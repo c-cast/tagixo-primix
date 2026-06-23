@@ -31,7 +31,42 @@ class TagixoPrimixPlugin implements Plugin
 
     public function register(Panel $panel): void
     {
-        $resources = [
+        // The resource list is config-driven: comment out a line in
+        // config/tagixo-primix.php to hide that builder from the admin panel.
+        // Fall back to the package defaults when the config is unavailable.
+        $resources = array_values(array_filter(
+            (array) config('tagixo-primix.resources', $this->defaultResources()),
+            fn ($resource) => is_string($resource) && class_exists($resource),
+        ));
+
+        // The fluent opt-in flags still add their resource (deduped), so
+        // existing ->withMediaGallery() / ->withMailTemplates() /
+        // ->withPdfTemplates() call sites keep working alongside the config.
+        foreach ([
+            [$this->mediaGallery, MediaResource::class],
+            [$this->mailTemplates, MailResource::class],
+            [$this->pdfTemplates, PdfResource::class],
+        ] as [$enabled, $resource]) {
+            if ($enabled && ! in_array($resource, $resources, true)) {
+                $resources[] = $resource;
+            }
+        }
+
+        $panel->resources($resources);
+
+        $panel->pages([
+            SiteScriptsPage::class,
+        ]);
+    }
+
+    /**
+     * Default resources used when config/tagixo-primix.php is not loaded.
+     *
+     * @return array<int, class-string>
+     */
+    private function defaultResources(): array
+    {
+        return [
             PageResource::class,
             LayoutResource::class,
             MenuResource::class,
@@ -40,24 +75,6 @@ class TagixoPrimixPlugin implements Plugin
             PopupResource::class,
             GlobalBlockResource::class,
         ];
-
-        if ($this->mediaGallery) {
-            $resources[] = MediaResource::class;
-        }
-
-        if ($this->mailTemplates) {
-            $resources[] = MailResource::class;
-        }
-
-        if ($this->pdfTemplates) {
-            $resources[] = PdfResource::class;
-        }
-
-        $panel->resources($resources);
-
-        $panel->pages([
-            SiteScriptsPage::class,
-        ]);
     }
 
     public function boot(Panel $panel): void

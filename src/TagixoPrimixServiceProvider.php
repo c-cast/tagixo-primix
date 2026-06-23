@@ -7,9 +7,18 @@ use Illuminate\Support\ServiceProvider;
 
 class TagixoPrimixServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        $this->mergeConfigFrom(__DIR__.'/../config/tagixo-primix.php', 'tagixo-primix');
+    }
+
     public function boot(): void
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'tagixo-primix');
+
+        $this->publishes([
+            __DIR__.'/../config/tagixo-primix.php' => config_path('tagixo-primix.php'),
+        ], 'tagixo-primix-config');
 
         // Primix consumes Tagixo form schemas as app-side (resource) forms, where
         // interactive layout modules (Tabs/Wizard/Group) are first-class — so
