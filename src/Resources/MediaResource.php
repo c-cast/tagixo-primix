@@ -71,6 +71,8 @@ class MediaResource extends Resource
     {
         return $table
             ->query(Media::query()->originals()->latest())
+            ->grid(4)
+            ->switchableLayout()
             ->columns([
                 ImageColumn::make('path')
                     ->label(__('Preview'))

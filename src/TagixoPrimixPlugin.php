@@ -2,7 +2,6 @@
 
 namespace Ccast\TagixoPrimix;
 
-use Ccast\TagixoPrimix\Pages\SiteScriptsPage;
 use Ccast\TagixoPrimix\Resources\Forms\FormResource;
 use Ccast\TagixoPrimix\Resources\GlobalBlocks\GlobalBlockResource;
 use Ccast\TagixoPrimix\Resources\LayoutResource;
@@ -54,9 +53,6 @@ class TagixoPrimixPlugin implements Plugin
 
         $panel->resources($resources);
 
-        $panel->pages([
-            SiteScriptsPage::class,
-        ]);
     }
 
     /**
