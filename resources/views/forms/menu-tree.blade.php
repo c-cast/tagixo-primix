@@ -215,6 +215,11 @@ const initMenuTreeSortable = () => {
     let dragLen = 1;
     let dragItem = null;
     let startX = null;
+    let startY = null;
+    let currentX = null;
+    let currentY = null;
+    // 'horizontal' = depth-change gesture (lock vertical pos); 'vertical' = reorder; null = undecided.
+    let gestureType = null;
     let startDepth = 0;
     let candidateDepth = 0;
 
@@ -230,13 +235,27 @@ const initMenuTreeSortable = () => {
 
     // Live horizontal tracking: drag right/left to pick the target depth (WP
     // style). The dragged row indents in real time as a ghost of where/at what
-    // level it will land — same level vs sub-item.
+    // level it will land — same level vs sub-item. Also detects whether the
+    // gesture is primarily horizontal (depth change) or vertical (reorder).
     const onMenuTreeDragMove = (e) => {
         if (!dragItem) return;
         const x = e.clientX != null ? e.clientX
             : (e.touches && e.touches[0] ? e.touches[0].clientX : null);
+        const y = e.clientY != null ? e.clientY
+            : (e.touches && e.touches[0] ? e.touches[0].clientY : null);
         if (x == null) return;
-        if (startX === null) startX = x;
+        if (startX === null) { startX = x; startY = y; }
+        currentX = x;
+        currentY = y;
+
+        // Latch gesture type on the first significant movement (>10 px on either axis).
+        if (!gestureType && startY != null && y != null) {
+            const dx = Math.abs(x - startX);
+            const dy = Math.abs(y - startY);
+            if (dx > 10 || dy > 10) {
+                gestureType = dx > dy ? 'horizontal' : 'vertical';
+            }
+        }
 
         const maxDepth = maxDepthAtDragPosition();
         let d = startDepth + Math.round((x - startX) / MENU_TREE_INDENT_STEP);
@@ -264,6 +283,10 @@ const initMenuTreeSortable = () => {
             candidateDepth = startDepth;
             dragItem = evt.item;
             startX = null;
+            startY = null;
+            currentX = null;
+            currentY = null;
+            gestureType = null;
 
             dragLen = 1;
             for (let j = dragPos + 1; j < snapshot.length; j++) {
@@ -278,6 +301,9 @@ const initMenuTreeSortable = () => {
 
             MENU_TREE_MOVE_EVENTS.forEach((t) => document.addEventListener(t, onMenuTreeDragMove, true));
         },
+        // When horizontal movement dominates (depth-change gesture), prevent
+        // SortableJS from reordering vertically so the item stays in place.
+        onMove: () => gestureType !== 'horizontal',
         onEnd: (evt) => {
             MENU_TREE_MOVE_EVENTS.forEach((t) => document.removeEventListener(t, onMenuTreeDragMove, true));
 
@@ -290,10 +316,12 @@ const initMenuTreeSortable = () => {
 
             const instance = list.__menuTreeSortable || window.Sortable.get(list);
 
-            // New sequence of original positions after SortableJS moved the single
-            // dragged row (a dragged parent's children are still scattered). Read
-            // BEFORE reverting the DOM.
-            const newOrder = instance ? instance.toArray().map(Number) : [];
+            // For a horizontal (depth-change) gesture the item didn't move vertically,
+            // so use the pre-drag order. For a vertical (reorder) gesture, read the
+            // new order from the DOM after SortableJS moved the element.
+            const newOrder = (gestureType === 'horizontal' || !instance)
+                ? domOrder.map(Number)
+                : instance.toArray().map(Number);
 
             // Revert the DOM so Vue's v-for vdom stays consistent; the server
             // reorder + re-render is the source of truth.
@@ -349,7 +377,7 @@ const ensureMenuTreeSortable = () => {
 };
 ensureMenuTreeSortable();
 if (!window.__menuTreeWatcher) {
-    window.__menuTreeWatcher = setInterval(ensureMenuTreeSortable, 300);
+    window.__menuTreeWatcher = setInterval(ensureMenuTreeSortable, 50);
 }
 document.addEventListener('livue:navigated', ensureMenuTreeSortable);
 
