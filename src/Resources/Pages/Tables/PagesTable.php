@@ -112,7 +112,6 @@ class PagesTable
                     ->icon('heroicon-o-paint-brush')
                     ->color('primary')
                     ->url(fn (Page $record) => PageResource::getUrl('build', ['record' => $record]))
-                    ->openUrlInNewTab(),
 
                 Action::make('publish')
                     ->label(__('Publish'))

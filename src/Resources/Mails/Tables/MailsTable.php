@@ -90,7 +90,6 @@ class MailsTable
                     ->icon('heroicon-o-paint-brush')
                     ->color('primary')
                     ->url(fn (MailTemplate $record) => MailResource::getUrl('build', ['record' => $record]))
-                    ->openUrlInNewTab(),
 
                 Action::make('sendTest')
                     ->label(__('Send test'))

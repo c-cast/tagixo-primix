@@ -19,7 +19,6 @@ class ListPopups extends ListRecords
                 ->color('primary')
                 ->url(fn (): string => route('builder.popups.new')
                     .'?back='.urlencode(PopupResource::getUrl('index')))
-                ->openUrlInNewTab(),
         ];
     }
 }

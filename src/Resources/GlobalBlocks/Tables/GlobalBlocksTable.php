@@ -66,7 +66,6 @@ class GlobalBlocksTable
                     ->color('primary')
                     ->url(fn (GlobalBlock $record): string => route('builder.global-blocks.edit', $record->id)
                         .'?back='.urlencode(GlobalBlockResource::getUrl('index')))
-                    ->openUrlInNewTab(),
 
                 EditAction::make(),
                 DeleteAction::make(),

@@ -29,7 +29,6 @@ class EditPdf extends EditRecord
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('gray')
                 ->url(fn () => url('/admin/pdfs/' . $this->record->getKey() . '/download'))
-                ->openUrlInNewTab(),
 
             Action::make('publish')
                 ->label(__('Publish'))

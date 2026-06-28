@@ -19,7 +19,6 @@ class ListGlobalBlocks extends ListRecords
                 ->color('primary')
                 ->url(fn (): string => route('builder.global-blocks.new')
                     .'?back='.urlencode(GlobalBlockResource::getUrl('index')))
-                ->openUrlInNewTab(),
         ];
     }
 }

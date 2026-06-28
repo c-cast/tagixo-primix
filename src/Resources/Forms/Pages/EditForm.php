@@ -20,7 +20,6 @@ class EditForm extends EditRecord
                 ->color('primary')
                 ->url(fn () => route('builder.forms.edit', $this->record->id)
                     . '?back=' . urlencode(FormResource::getUrl('edit', ['record' => $this->record])))
-                ->openUrlInNewTab(),
 
             DeleteAction::make(),
         ];

@@ -19,7 +19,6 @@ class ListForms extends ListRecords
                 ->color('primary')
                 ->url(fn (): string => route('builder.forms.new')
                     . '?back=' . urlencode(FormResource::getUrl('index')))
-                ->openUrlInNewTab(),
         ];
     }
 }

@@ -20,7 +20,6 @@ class EditSlider extends EditRecord
                 ->color('primary')
                 ->url(fn () => route('builder.sliders.edit', $this->record->id)
                     . '?back=' . urlencode(SliderResource::getUrl('edit', ['record' => $this->record])))
-                ->openUrlInNewTab(),
 
             DeleteAction::make(),
         ];

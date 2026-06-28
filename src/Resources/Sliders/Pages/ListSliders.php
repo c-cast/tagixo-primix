@@ -19,7 +19,6 @@ class ListSliders extends ListRecords
                 ->color('primary')
                 ->url(fn (): string => route('builder.sliders.new')
                     . '?back=' . urlencode(SliderResource::getUrl('index')))
-                ->openUrlInNewTab(),
         ];
     }
 }

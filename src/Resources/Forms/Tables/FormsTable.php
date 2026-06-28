@@ -61,7 +61,6 @@ class FormsTable
                     ->color('primary')
                     ->url(fn (FormSchema $record): string => route('builder.forms.edit', $record->id)
                         . '?back=' . urlencode(FormResource::getUrl('index')))
-                    ->openUrlInNewTab(),
 
                 EditAction::make(),
                 DeleteAction::make(),

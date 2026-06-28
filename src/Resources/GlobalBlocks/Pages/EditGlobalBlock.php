@@ -20,7 +20,6 @@ class EditGlobalBlock extends EditRecord
                 ->color('primary')
                 ->url(fn () => route('builder.global-blocks.edit', $this->record->id)
                     .'?back='.urlencode(GlobalBlockResource::getUrl('edit', ['record' => $this->record])))
-                ->openUrlInNewTab(),
 
             DeleteAction::make(),
         ];

@@ -61,7 +61,6 @@ class SlidersTable
                     ->color('primary')
                     ->url(fn (Slider $record): string => route('builder.sliders.edit', $record->id)
                         . '?back=' . urlencode(SliderResource::getUrl('index')))
-                    ->openUrlInNewTab(),
 
                 EditAction::make(),
                 DeleteAction::make(),
