@@ -27,6 +27,7 @@ class MenuTreeStructure
     public static function blankItem(): array
     {
         return [
+            '_key' => uniqid('mtk_', true),
             'label' => '',
             'target_type' => 'url',
             'target_page_id' => null,
@@ -58,6 +59,7 @@ class MenuTreeStructure
             $children = $node['children'] ?? [];
             unset($node['children']);
             $node['depth'] = $depth;
+            $node['_key'] = $node['_key'] ?? uniqid('mtk_', true);
             $flat[] = $node;
 
             if (is_array($children) && $children !== []) {

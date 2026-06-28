@@ -8,7 +8,7 @@
 <div class="menu-tree" data-menu-tree>
     {{-- Tree --}}
     <div class="menu-tree-list flex flex-col" data-menu-tree-list>
-        <template v-for="(item, i) in {{ $statePath }}" :key="i">
+        <template v-for="(item, i) in {{ $statePath }}" :key="item._key || i">
             <div
                 class="menu-tree-row group flex items-center gap-2 mb-1 rounded-md bg-[var(--p-content-background)] ring-1 ring-[var(--p-content-border-color)]"
                 :data-index="i"
@@ -210,16 +210,10 @@ const initMenuTreeSortable = () => {
     }
 
     let snapshot = [];
-    let domOrder = [];
     let dragPos = 0;
     let dragLen = 1;
     let dragItem = null;
     let startX = null;
-    let startY = null;
-    let currentX = null;
-    let currentY = null;
-    // 'horizontal' = depth-change gesture (lock vertical pos); 'vertical' = reorder; null = undecided.
-    let gestureType = null;
     let startDepth = 0;
     let candidateDepth = 0;
 
@@ -235,27 +229,13 @@ const initMenuTreeSortable = () => {
 
     // Live horizontal tracking: drag right/left to pick the target depth (WP
     // style). The dragged row indents in real time as a ghost of where/at what
-    // level it will land — same level vs sub-item. Also detects whether the
-    // gesture is primarily horizontal (depth change) or vertical (reorder).
+    // level it will land — same level vs sub-item.
     const onMenuTreeDragMove = (e) => {
         if (!dragItem) return;
         const x = e.clientX != null ? e.clientX
             : (e.touches && e.touches[0] ? e.touches[0].clientX : null);
-        const y = e.clientY != null ? e.clientY
-            : (e.touches && e.touches[0] ? e.touches[0].clientY : null);
         if (x == null) return;
-        if (startX === null) { startX = x; startY = y; }
-        currentX = x;
-        currentY = y;
-
-        // Latch gesture type on the first significant movement (>10 px on either axis).
-        if (!gestureType && startY != null && y != null) {
-            const dx = Math.abs(x - startX);
-            const dy = Math.abs(y - startY);
-            if (dx > 10 || dy > 10) {
-                gestureType = dx > dy ? 'horizontal' : 'vertical';
-            }
-        }
+        if (startX === null) startX = x;
 
         const maxDepth = maxDepthAtDragPosition();
         let d = startDepth + Math.round((x - startX) / MENU_TREE_INDENT_STEP);
@@ -277,16 +257,11 @@ const initMenuTreeSortable = () => {
             // dragged item, not the list), so grab the instance from the closure.
             const instance = list.__menuTreeSortable || window.Sortable.get(list);
             snapshot = menuTreeSnapshot(list);
-            domOrder = instance ? instance.toArray() : [];
             dragPos = evt.oldIndex;
             startDepth = snapshot[dragPos] ? snapshot[dragPos].depth : 0;
             candidateDepth = startDepth;
             dragItem = evt.item;
             startX = null;
-            startY = null;
-            currentX = null;
-            currentY = null;
-            gestureType = null;
 
             dragLen = 1;
             for (let j = dragPos + 1; j < snapshot.length; j++) {
@@ -301,9 +276,6 @@ const initMenuTreeSortable = () => {
 
             MENU_TREE_MOVE_EVENTS.forEach((t) => document.addEventListener(t, onMenuTreeDragMove, true));
         },
-        // When horizontal movement dominates (depth-change gesture), prevent
-        // SortableJS from reordering vertically so the item stays in place.
-        onMove: () => gestureType !== 'horizontal',
         onEnd: (evt) => {
             MENU_TREE_MOVE_EVENTS.forEach((t) => document.removeEventListener(t, onMenuTreeDragMove, true));
 
@@ -316,37 +288,39 @@ const initMenuTreeSortable = () => {
 
             const instance = list.__menuTreeSortable || window.Sortable.get(list);
 
-            // For a horizontal (depth-change) gesture the item didn't move vertically,
-            // so use the pre-drag order. For a vertical (reorder) gesture, read the
-            // new order from the DOM after SortableJS moved the element.
-            const newOrder = (gestureType === 'horizontal' || !instance)
-                ? domOrder.map(Number)
-                : instance.toArray().map(Number);
-
-            // Revert the DOM so Vue's v-for vdom stays consistent; the server
-            // reorder + re-render is the source of truth.
-            if (instance && domOrder.length) {
-                instance.sort(domOrder, false);
-            }
+            // Read the new data-index order SortableJS produced. newOrder contains
+            // data-index VALUES (from dataIdAttr:'data-index'), not DOM positions.
+            // We do NOT revert the DOM: SortableJS only moves element nodes, never
+            // Vue's fragment comment anchors, so the anchor stays at the end and
+            // subsequent Vue insertions land correctly. With stable :key="_key",
+            // Vue moves elements to the right positions after the server responds.
+            const newOrder = instance ? instance.toArray().map(Number) : [];
 
             const bridge = menuTreeBridge(list);
             if (!bridge || !bridge.call) { dragItem = null; return; }
 
-            // The dragged block = the item plus its descendants (contiguous in the
-            // original snapshot). Walk the new sequence and reassemble: at the
-            // dragged row's new spot splice the whole block in, skip its children
-            // wherever SortableJS left them. This keeps subtrees intact for any
-            // depth / item count (no fragile newIndex math).
+            // The dragged block = dragged item + its descendants in the snapshot.
             const block = snapshot.slice(dragPos, dragPos + dragLen);
-            const inBlock = new Set();
-            for (let k = 0; k < dragLen; k++) inBlock.add(dragPos + k);
 
+            // dragDataIndex: the data-index value of the dragged element.
+            // blockIndices: data-index values of all block members (to skip them
+            // when they appear elsewhere in newOrder as SortableJS scattered them).
+            const dragDataIndex = block[0] ? block[0].index : -1;
+            const blockIndices = new Set(block.map((b) => b.index));
+
+            // O(1) lookup: data-index → snapshot entry.
+            const snapByIdx = {};
+            snapshot.forEach((s) => { snapByIdx[s.index] = s; });
+
+            // Walk the new data-index sequence SortableJS produced. At the dragged
+            // item's new position inject the whole block; ignore scattered block
+            // members wherever SortableJS left them.
             const result = [];
-            for (const pos of newOrder) {
-                if (pos === dragPos) {
+            for (const dataIdx of newOrder) {
+                if (dataIdx === dragDataIndex) {
                     for (const b of block) result.push(b);
-                } else if (! inBlock.has(pos)) {
-                    result.push(snapshot[pos]);
+                } else if (!blockIndices.has(dataIdx)) {
+                    result.push(snapByIdx[dataIdx]);
                 }
             }
 
@@ -361,7 +335,8 @@ const initMenuTreeSortable = () => {
             block.forEach((b) => { b.depth = Math.max(0, b.depth + delta); });
 
             dragItem = null;
-            bridge.call('menuTreeReorder', [result.map((o) => ({ index: o.index, depth: o.depth }))]);
+            const payload = result.map((o) => ({ index: o.index, depth: o.depth }));
+            bridge.call('menuTreeReorder', [payload]);
         },
     });
 };

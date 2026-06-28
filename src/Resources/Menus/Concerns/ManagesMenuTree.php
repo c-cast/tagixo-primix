@@ -126,8 +126,26 @@ trait ManagesMenuTree
     protected function menuTreeItems(): array
     {
         $items = $this->data['items'] ?? [];
+        $items = is_array($items) ? array_values($items) : [];
 
-        return is_array($items) ? array_values($items) : [];
+        // Assign stable Vue v-for keys to any item that lacks one (e.g. items
+        // loaded from DB before the _key field was introduced). Keys persist
+        // through reorder/edit so Vue can move DOM elements instead of
+        // patching in-place, which fixes the SortableJS anchor-displacement bug.
+        $needsSave = false;
+        foreach ($items as &$item) {
+            if (is_array($item) && empty($item['_key'])) {
+                $item['_key'] = uniqid('mtk_', true);
+                $needsSave = true;
+            }
+        }
+        unset($item);
+
+        if ($needsSave) {
+            $this->data['items'] = $items;
+        }
+
+        return $items;
     }
 
     /**
