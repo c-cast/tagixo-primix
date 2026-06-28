@@ -2,8 +2,8 @@
 
 namespace Ccast\TagixoPrimix\Resources\Sliders\Pages;
 
+use Ccast\TagixoPrimix\Actions\VisualBuilderAction;
 use Ccast\TagixoPrimix\Resources\Sliders\SliderResource;
-use Primix\Actions\Action;
 use Primix\Resources\Actions\DeleteAction;
 use Primix\Resources\Pages\EditRecord;
 
@@ -14,12 +14,8 @@ class EditSlider extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('visualBuilder')
-                ->label(__('Open Visual Builder'))
-                ->icon('heroicon-o-paint-brush')
-                ->color('primary')
-                ->url(fn () => route('builder.sliders.edit', $this->record->id)
-                    . '?back=' . urlencode(SliderResource::getUrl('edit', ['record' => $this->record]))),
+            VisualBuilderAction::make(fn () => route('builder.sliders.edit', $this->record->id)
+                . '?back=' . urlencode(SliderResource::getUrl('edit', ['record' => $this->record]))),
 
             DeleteAction::make(),
         ];

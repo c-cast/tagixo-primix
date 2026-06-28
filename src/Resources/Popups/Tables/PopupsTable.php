@@ -3,6 +3,7 @@
 namespace Ccast\TagixoPrimix\Resources\Popups\Tables;
 
 use Ccast\Tagixo\Models\Popup;
+use Ccast\TagixoPrimix\Actions\VisualBuilderAction;
 use Ccast\TagixoPrimix\Resources\Popups\PopupResource;
 use Primix\Actions\Action;
 use Primix\Resources\Actions\DeleteAction;
@@ -55,12 +56,8 @@ class PopupsTable
                     ]),
             ])
             ->actions([
-                Action::make('visualBuilder')
-                    ->label(__('Visual Builder'))
-                    ->icon('heroicon-o-paint-brush')
-                    ->color('primary')
-                    ->url(fn (Popup $record): string => route('builder.popups.edit', $record->id)
-                        .'?back='.urlencode(PopupResource::getUrl('index'))),
+                VisualBuilderAction::make(fn (Popup $record): string => route('builder.popups.edit', $record->id)
+                    .'?back='.urlencode(PopupResource::getUrl('index'))),
 
                 EditAction::make(),
                 DeleteAction::make(),

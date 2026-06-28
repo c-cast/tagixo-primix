@@ -5,6 +5,7 @@ namespace Ccast\TagixoPrimix\Resources\Mails\Tables;
 use Ccast\Tagixo\Enums\PageStatus;
 use Ccast\Tagixo\Facades\Tagixo;
 use Ccast\Tagixo\Models\MailTemplate;
+use Ccast\TagixoPrimix\Actions\VisualBuilderAction;
 use Ccast\TagixoPrimix\Resources\Mails\MailResource;
 use Primix\Actions\Action;
 use Primix\Forms\Components\Fields\Textarea;
@@ -85,11 +86,7 @@ class MailsTable
             ->actions([
                 EditAction::make(),
 
-                Action::make('visualBuilder')
-                    ->label(__('Visual Builder'))
-                    ->icon('heroicon-o-paint-brush')
-                    ->color('primary')
-                    ->url(fn (MailTemplate $record) => MailResource::getUrl('build', ['record' => $record])),
+                VisualBuilderAction::make(fn (MailTemplate $record) => MailResource::getUrl('build', ['record' => $record])),
 
                 Action::make('sendTest')
                     ->label(__('Send test'))

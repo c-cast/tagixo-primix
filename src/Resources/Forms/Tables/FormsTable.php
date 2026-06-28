@@ -3,6 +3,7 @@
 namespace Ccast\TagixoPrimix\Resources\Forms\Tables;
 
 use Ccast\Tagixo\Models\FormSchema;
+use Ccast\TagixoPrimix\Actions\VisualBuilderAction;
 use Ccast\TagixoPrimix\Resources\Forms\FormResource;
 use Primix\Actions\Action;
 use Primix\Resources\Actions\DeleteAction;
@@ -55,12 +56,8 @@ class FormsTable
                     ]),
             ])
             ->actions([
-                Action::make('visualBuilder')
-                    ->label(__('Visual Builder'))
-                    ->icon('heroicon-o-paint-brush')
-                    ->color('primary')
-                    ->url(fn (FormSchema $record): string => route('builder.forms.edit', $record->id)
-                        . '?back=' . urlencode(FormResource::getUrl('index'))),
+                VisualBuilderAction::make(fn (FormSchema $record): string => route('builder.forms.edit', $record->id)
+                    . '?back=' . urlencode(FormResource::getUrl('index'))),
 
                 EditAction::make(),
                 DeleteAction::make(),

@@ -5,6 +5,7 @@ namespace Ccast\TagixoPrimix\Resources\Pages\Tables;
 use Ccast\Tagixo\Enums\PageStatus;
 use Ccast\Tagixo\Models\Layout;
 use Ccast\Tagixo\Models\Page;
+use Ccast\TagixoPrimix\Actions\VisualBuilderAction;
 use Ccast\TagixoPrimix\Resources\Pages\PageResource;
 use Primix\Actions\Action;
 use Primix\Resources\Actions\DeleteAction;
@@ -107,11 +108,7 @@ class PagesTable
             ->actions([
                 EditAction::make(),
 
-                Action::make('visualBuilder')
-                    ->label(__('Visual Builder'))
-                    ->icon('heroicon-o-paint-brush')
-                    ->color('primary')
-                    ->url(fn (Page $record) => PageResource::getUrl('build', ['record' => $record])),
+                VisualBuilderAction::make(fn (Page $record) => PageResource::getUrl('build', ['record' => $record])),
 
                 Action::make('publish')
                     ->label(__('Publish'))

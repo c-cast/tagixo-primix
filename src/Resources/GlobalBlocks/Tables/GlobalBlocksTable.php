@@ -3,6 +3,7 @@
 namespace Ccast\TagixoPrimix\Resources\GlobalBlocks\Tables;
 
 use Ccast\Tagixo\Models\GlobalBlock;
+use Ccast\TagixoPrimix\Actions\VisualBuilderAction;
 use Ccast\TagixoPrimix\Resources\GlobalBlocks\GlobalBlockResource;
 use Primix\Actions\Action;
 use Primix\Resources\Actions\DeleteAction;
@@ -60,12 +61,8 @@ class GlobalBlocksTable
                     ]),
             ])
             ->actions([
-                Action::make('visualBuilder')
-                    ->label(__('Visual Builder'))
-                    ->icon('heroicon-o-paint-brush')
-                    ->color('primary')
-                    ->url(fn (GlobalBlock $record): string => route('builder.global-blocks.edit', $record->id)
-                        .'?back='.urlencode(GlobalBlockResource::getUrl('index'))),
+                VisualBuilderAction::make(fn (GlobalBlock $record): string => route('builder.global-blocks.edit', $record->id)
+                    .'?back='.urlencode(GlobalBlockResource::getUrl('index'))),
 
                 EditAction::make(),
                 DeleteAction::make(),

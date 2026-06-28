@@ -4,6 +4,7 @@ namespace Ccast\TagixoPrimix\Resources\Pdfs\Tables;
 
 use Ccast\Tagixo\Enums\PageStatus;
 use Ccast\Tagixo\Models\PdfTemplate;
+use Ccast\TagixoPrimix\Actions\VisualBuilderAction;
 use Ccast\TagixoPrimix\Resources\Pdfs\PdfResource;
 use Primix\Actions\Action;
 use Primix\Resources\Actions\DeleteAction;
@@ -93,11 +94,7 @@ class PdfsTable
             ->actions([
                 EditAction::make(),
 
-                Action::make('visualBuilder')
-                    ->label(__('Visual Builder'))
-                    ->icon('heroicon-o-paint-brush')
-                    ->color('primary')
-                    ->url(fn (PdfTemplate $record) => PdfResource::getUrl('build', ['record' => $record])),
+                VisualBuilderAction::make(fn (PdfTemplate $record) => PdfResource::getUrl('build', ['record' => $record])),
 
                 Action::make('download')
                     ->label(__('Download PDF'))
