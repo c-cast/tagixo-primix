@@ -18,7 +18,7 @@ class ListSliders extends ListRecords
                 ->icon('heroicon-o-plus')
                 ->color('primary')
                 ->url(fn (): string => route('builder.sliders.new')
-                    . '?back=' . urlencode(SliderResource::getUrl('index')))
+                    . '?back=' . urlencode(SliderResource::getUrl('index'))),
         ];
     }
 }

@@ -19,7 +19,7 @@ class EditForm extends EditRecord
                 ->icon('heroicon-o-paint-brush')
                 ->color('primary')
                 ->url(fn () => route('builder.forms.edit', $this->record->id)
-                    . '?back=' . urlencode(FormResource::getUrl('edit', ['record' => $this->record])))
+                    . '?back=' . urlencode(FormResource::getUrl('edit', ['record' => $this->record]))),
 
             DeleteAction::make(),
         ];

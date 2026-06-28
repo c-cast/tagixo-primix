@@ -19,7 +19,7 @@ class EditGlobalBlock extends EditRecord
                 ->icon('heroicon-o-paint-brush')
                 ->color('primary')
                 ->url(fn () => route('builder.global-blocks.edit', $this->record->id)
-                    .'?back='.urlencode(GlobalBlockResource::getUrl('edit', ['record' => $this->record])))
+                    .'?back='.urlencode(GlobalBlockResource::getUrl('edit', ['record' => $this->record]))),
 
             DeleteAction::make(),
         ];

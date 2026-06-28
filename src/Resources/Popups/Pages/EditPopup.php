@@ -19,7 +19,7 @@ class EditPopup extends EditRecord
                 ->icon('heroicon-o-paint-brush')
                 ->color('primary')
                 ->url(fn () => route('builder.popups.edit', $this->record->id)
-                    .'?back='.urlencode(PopupResource::getUrl('edit', ['record' => $this->record])))
+                    .'?back='.urlencode(PopupResource::getUrl('edit', ['record' => $this->record]))),
 
             DeleteAction::make(),
         ];

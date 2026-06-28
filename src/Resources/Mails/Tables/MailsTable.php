@@ -89,7 +89,7 @@ class MailsTable
                     ->label(__('Visual Builder'))
                     ->icon('heroicon-o-paint-brush')
                     ->color('primary')
-                    ->url(fn (MailTemplate $record) => MailResource::getUrl('build', ['record' => $record]))
+                    ->url(fn (MailTemplate $record) => MailResource::getUrl('build', ['record' => $record])),
 
                 Action::make('sendTest')
                     ->label(__('Send test'))

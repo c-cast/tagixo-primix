@@ -60,7 +60,7 @@ class SlidersTable
                     ->icon('heroicon-o-paint-brush')
                     ->color('primary')
                     ->url(fn (Slider $record): string => route('builder.sliders.edit', $record->id)
-                        . '?back=' . urlencode(SliderResource::getUrl('index')))
+                        . '?back=' . urlencode(SliderResource::getUrl('index'))),
 
                 EditAction::make(),
                 DeleteAction::make(),

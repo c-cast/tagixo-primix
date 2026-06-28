@@ -18,7 +18,7 @@ class ListPopups extends ListRecords
                 ->icon('heroicon-o-plus')
                 ->color('primary')
                 ->url(fn (): string => route('builder.popups.new')
-                    .'?back='.urlencode(PopupResource::getUrl('index')))
+                    .'?back='.urlencode(PopupResource::getUrl('index'))),
         ];
     }
 }

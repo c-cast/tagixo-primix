@@ -111,7 +111,7 @@ class PagesTable
                     ->label(__('Visual Builder'))
                     ->icon('heroicon-o-paint-brush')
                     ->color('primary')
-                    ->url(fn (Page $record) => PageResource::getUrl('build', ['record' => $record]))
+                    ->url(fn (Page $record) => PageResource::getUrl('build', ['record' => $record])),
 
                 Action::make('publish')
                     ->label(__('Publish'))

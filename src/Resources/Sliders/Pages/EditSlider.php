@@ -19,7 +19,7 @@ class EditSlider extends EditRecord
                 ->icon('heroicon-o-paint-brush')
                 ->color('primary')
                 ->url(fn () => route('builder.sliders.edit', $this->record->id)
-                    . '?back=' . urlencode(SliderResource::getUrl('edit', ['record' => $this->record])))
+                    . '?back=' . urlencode(SliderResource::getUrl('edit', ['record' => $this->record]))),
 
             DeleteAction::make(),
         ];

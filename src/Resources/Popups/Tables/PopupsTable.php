@@ -60,7 +60,7 @@ class PopupsTable
                     ->icon('heroicon-o-paint-brush')
                     ->color('primary')
                     ->url(fn (Popup $record): string => route('builder.popups.edit', $record->id)
-                        .'?back='.urlencode(PopupResource::getUrl('index')))
+                        .'?back='.urlencode(PopupResource::getUrl('index'))),
 
                 EditAction::make(),
                 DeleteAction::make(),

@@ -65,7 +65,7 @@ class GlobalBlocksTable
                     ->icon('heroicon-o-paint-brush')
                     ->color('primary')
                     ->url(fn (GlobalBlock $record): string => route('builder.global-blocks.edit', $record->id)
-                        .'?back='.urlencode(GlobalBlockResource::getUrl('index')))
+                        .'?back='.urlencode(GlobalBlockResource::getUrl('index'))),
 
                 EditAction::make(),
                 DeleteAction::make(),

@@ -18,7 +18,7 @@ class ListForms extends ListRecords
                 ->icon('heroicon-o-plus')
                 ->color('primary')
                 ->url(fn (): string => route('builder.forms.new')
-                    . '?back=' . urlencode(FormResource::getUrl('index')))
+                    . '?back=' . urlencode(FormResource::getUrl('index'))),
         ];
     }
 }

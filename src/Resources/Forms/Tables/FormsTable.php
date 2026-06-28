@@ -60,7 +60,7 @@ class FormsTable
                     ->icon('heroicon-o-paint-brush')
                     ->color('primary')
                     ->url(fn (FormSchema $record): string => route('builder.forms.edit', $record->id)
-                        . '?back=' . urlencode(FormResource::getUrl('index')))
+                        . '?back=' . urlencode(FormResource::getUrl('index'))),
 
                 EditAction::make(),
                 DeleteAction::make(),

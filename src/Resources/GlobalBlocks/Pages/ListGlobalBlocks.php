@@ -18,7 +18,7 @@ class ListGlobalBlocks extends ListRecords
                 ->icon('heroicon-o-plus')
                 ->color('primary')
                 ->url(fn (): string => route('builder.global-blocks.new')
-                    .'?back='.urlencode(GlobalBlockResource::getUrl('index')))
+                    .'?back='.urlencode(GlobalBlockResource::getUrl('index'))),
         ];
     }
 }

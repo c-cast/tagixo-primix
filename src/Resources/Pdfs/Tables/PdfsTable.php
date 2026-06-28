@@ -97,13 +97,13 @@ class PdfsTable
                     ->label(__('Visual Builder'))
                     ->icon('heroicon-o-paint-brush')
                     ->color('primary')
-                    ->url(fn (PdfTemplate $record) => PdfResource::getUrl('build', ['record' => $record]))
+                    ->url(fn (PdfTemplate $record) => PdfResource::getUrl('build', ['record' => $record])),
 
                 Action::make('download')
                     ->label(__('Download PDF'))
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('gray')
-                    ->url(fn (PdfTemplate $record) => url('/admin/pdfs/' . $record->getKey() . '/download'))
+                    ->url(fn (PdfTemplate $record) => url('/admin/pdfs/' . $record->getKey() . '/download')),
 
                 Action::make('duplicate')
                     ->label(__('Duplicate'))
