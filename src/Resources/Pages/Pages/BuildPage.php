@@ -2,7 +2,6 @@
 
 namespace Ccast\TagixoPrimix\Resources\Pages\Pages;
 
-use Ccast\Tagixo\Models\Layout;
 use Ccast\Tagixo\Renderers\PageRenderer;
 use Ccast\TagixoPrimix\Concerns\CleansBuilderStructure;
 use Ccast\TagixoPrimix\Pages\PrimixVisualBuilderPage;
@@ -11,8 +10,6 @@ use Ccast\TagixoPrimix\Resources\Pages\PageResource;
 class BuildPage extends PrimixVisualBuilderPage
 {
     use CleansBuilderStructure;
-
-    protected ?string $compiledFrontendCss = null;
 
     protected static ?string $resource = PageResource::class;
 
@@ -116,190 +113,14 @@ class BuildPage extends PrimixVisualBuilderPage
         ];
     }
 
+    /**
+     * Header/body/footer frame for the section toggler. Delegates to the core
+     * LayoutFrameBuilder so the logic lives in a single place (tagixo core),
+     * shared with the standalone builder and the /tagixo/builder/layout-frame
+     * endpoint used by SDKs that don't inject the frame.
+     */
     public function getLayoutFrameForVue(): array
     {
-        $record = $this->record;
-        $assignedLayout = $record->layout;
-        $globalLayout = $assignedLayout?->is_global ? $assignedLayout : Layout::global();
-
-        return [
-            'enabled' => true,
-            'activeScope' => 'body',
-            'body' => [
-                'scope' => 'body',
-                'label' => __('Body'),
-                'available' => true,
-                'editable' => true,
-                'previewHtml' => $record->rendered_html ?? '',
-                'previewCss' => $record->css ?? '',
-                'structure' => $this->getStructureForVue(),
-                'sourceKind' => 'page',
-                'sourceDescription' => null,
-            ],
-            'header' => $this->buildLayoutSectionFrame($assignedLayout, $globalLayout, 'header'),
-            'footer' => $this->buildLayoutSectionFrame($assignedLayout, $globalLayout, 'footer'),
-        ];
-    }
-
-    protected function buildLayoutSectionFrame(?Layout $assignedLayout, ?Layout $globalLayout, string $section): array
-    {
-        [$sourceLayout, $sourceKind] = $this->resolveLayoutSectionSource($assignedLayout, $globalLayout, $section);
-        $editableLayout = $sourceLayout ?? $globalLayout ?? $assignedLayout;
-        $editableKind = $sourceLayout ? $sourceKind : ($editableLayout?->is_global ? 'global' : ($editableLayout ? 'assigned' : 'none'));
-        $contentField = "{$section}_content";
-        $cssField = "{$section}_css";
-        $htmlField = "{$section}_rendered_html";
-        $structure = $sourceLayout ? $this->normalizeBuilderStructure($sourceLayout->getAttribute($contentField)) : ['body' => [], 'components' => []];
-
-        return [
-            'scope' => $section,
-            'label' => __($section === 'header' ? 'Header' : 'Footer'),
-            'available' => $sourceLayout !== null && (($sourceLayout->getAttribute($htmlField) ?? '') !== '' || $structure['components'] !== []),
-            'editable' => $editableLayout !== null,
-            'previewHtml' => $this->hydrateSectionPreviewHtml((string) ($sourceLayout?->getAttribute($htmlField) ?? ''), $structure),
-            'previewCss' => $this->composeLayoutPreviewCss($sourceLayout?->getAttribute($cssField)),
-            'structure' => $structure,
-            'sourceKind' => $editableKind,
-            'sourceLayoutId' => $editableLayout?->id,
-            'sourceLayoutName' => $editableLayout?->name,
-            'sourceDescription' => $this->layoutSectionDescription($section, $editableLayout, $editableKind),
-            'isFallback' => $sourceLayout !== null && $assignedLayout !== null && $sourceLayout->id !== $assignedLayout->id,
-            'saveUrl' => $editableLayout ? route('tagixo.layouts.sections.save', ['id' => $editableLayout->id, 'section' => $section]) : null,
-        ];
-    }
-
-    /**
-     * The layout's `*_rendered_html` is the frontend cache: live modules (e.g.
-     * Menu) are baked as <!--TGX_LIVE:nodeId--> markers, hydrated only at
-     * frontend render time. The builder's header/footer preview reads this
-     * cache directly, so without hydrating it the marker collapses to an empty
-     * wrapper and the header/footer looks blank in the page builder. Resolve
-     * the markers here using the section's own stored content tree (mirrors
-     * \Ccast\Tagixo\Builder\Types\DefaultPageType::hydratePreviewHtml).
-     *
-     * @param  array{body: mixed, components: mixed}  $structure
-     */
-    protected function hydrateSectionPreviewHtml(string $html, array $structure): string
-    {
-        if ($html === '' || ! str_contains($html, '<!--TGX_LIVE:')) {
-            return $html;
-        }
-
-        return app(PageRenderer::class)->hydrateLiveModules($html, $structure);
-    }
-
-    protected function resolveLayoutSectionSource(?Layout $assignedLayout, ?Layout $globalLayout, string $section): array
-    {
-        if ($this->layoutSectionConfigured($assignedLayout, $section)) {
-            return [$assignedLayout, 'assigned'];
-        }
-
-        if ($this->layoutSectionConfigured($globalLayout, $section)) {
-            return [$globalLayout, 'global'];
-        }
-
-        return [null, 'none'];
-    }
-
-    protected function layoutSectionConfigured(?Layout $layout, string $section): bool
-    {
-        if (! $layout) {
-            return false;
-        }
-
-        $content = $layout->getAttribute("{$section}_content");
-
-        if (is_array($content)) {
-            if (isset($content['components']) && is_array($content['components'])) {
-                return $content['components'] !== [] || ((isset($content['body']) && is_array($content['body'])) ? $content['body'] !== [] : false);
-            }
-
-            return $content !== [];
-        }
-
-        if (is_string($content)) {
-            return trim($content) !== '';
-        }
-
-        return ($layout->getAttribute("{$section}_rendered_html") ?? null) !== null;
-    }
-
-    protected function normalizeBuilderStructure(mixed $structure): array
-    {
-        if (is_array($structure)) {
-            if (array_key_exists('components', $structure)) {
-                return [
-                    'body' => is_array($structure['body'] ?? null) ? $structure['body'] : [],
-                    'components' => is_array($structure['components'] ?? null) ? $structure['components'] : [],
-                ];
-            }
-
-            return [
-                'body' => [],
-                'components' => $structure,
-            ];
-        }
-
-        if (is_string($structure) && trim($structure) !== '') {
-            $decoded = json_decode($structure, true);
-            if (is_array($decoded)) {
-                return $this->normalizeBuilderStructure($decoded);
-            }
-        }
-
-        return ['body' => [], 'components' => []];
-    }
-
-    protected function layoutSectionDescription(string $section, ?Layout $layout, string $sourceKind): string
-    {
-        $label = $section === 'header' ? __('header') : __('footer');
-
-        if (! $layout) {
-            return __('No layout is available to store this :section yet.', ['section' => $label]);
-        }
-
-        if ($sourceKind === 'global') {
-            return __('Changes to this :section update the global default layout.', ['section' => $label]);
-        }
-
-        return __('Changes to this :section update the assigned layout only.', ['section' => $label]);
-    }
-
-    protected function composeLayoutPreviewCss(?string $sectionCss): string
-    {
-        $parts = array_filter([
-            trim($this->getCompiledFrontendCss()),
-            trim((string) $sectionCss),
-        ]);
-
-        return implode("\n", $parts);
-    }
-
-    protected function getCompiledFrontendCss(): string
-    {
-        if ($this->compiledFrontendCss !== null) {
-            return $this->compiledFrontendCss;
-        }
-
-        $manifestPath = public_path('build/manifest.json');
-
-        if (! is_file($manifestPath)) {
-            return $this->compiledFrontendCss = '';
-        }
-
-        $manifest = json_decode((string) file_get_contents($manifestPath), true);
-        $entry = $manifest['vendor/ccast/tagixo/resources/css/frontend.css']['file'] ?? null;
-
-        if (! is_string($entry) || $entry === '') {
-            return $this->compiledFrontendCss = '';
-        }
-
-        $assetPath = public_path('build/' . ltrim($entry, '/'));
-
-        if (! is_file($assetPath)) {
-            return $this->compiledFrontendCss = '';
-        }
-
-        return $this->compiledFrontendCss = (string) file_get_contents($assetPath);
+        return app(\Ccast\Tagixo\Builder\LayoutFrameBuilder::class)->forPage($this->record);
     }
 }

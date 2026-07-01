@@ -15,19 +15,9 @@
             "email": "dev@mikrowl.com"
         }
     ],
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../tagixo"
-        },
-        {
-            "type": "path",
-            "url": "../../Projects/primix/packages/primix"
-        }
-    ],
     "require": {
         "php": "^8.2",
-        "ccast/tagixo": "@dev",
+        "ccast/tagixo": "^1.0.2",
         "primix/primix": "^0.7",
         "symfony/expression-language": "^6.4|^7.0"
     },
@@ -47,6 +37,9 @@
         }
     },
     "extra": {
+        "branch-alias": {
+            "dev-main": "1.x-dev"
+        },
         "laravel": {
             "providers": [
                 "Ccast\\TagixoPrimix\\TagixoPrimixServiceProvider"
