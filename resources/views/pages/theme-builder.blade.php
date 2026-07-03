@@ -18,7 +18,7 @@
         </div>
 
         {{-- Template grid --}}
-        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.5rem;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;">
 
             @foreach ($this->getLayouts() as $layout)
                 <div class="flex flex-col bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -127,7 +127,8 @@
 
             {{-- Add new template card --}}
             <button @click="handleOpenCreate()"
-                class="flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:border-blue-400 hover:text-blue-500 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer">
+                class="flex flex-col items-center justify-center gap-3 p-8 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:border-blue-400 hover:text-blue-500 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                style="min-height:200px;">
                 <x-heroicon-o-plus-circle class="w-10 h-10"/>
                 <span class="text-sm font-medium">{{ __('New Template') }}</span>
             </button>
@@ -170,10 +171,13 @@
 
                             {{-- ── PAGES section ── --}}
                             <div class="border border-gray-200 dark:border-gray-700 rounded-xl">
-                                <div class="px-4 py-2 bg-gray-50 dark:bg-gray-700/60 rounded-t-xl text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                    {{ __('Pages') }}
-                                </div>
+                                <button type="button" @click="toggleGroup('pages')"
+                                    class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-700/60 rounded-t-xl text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/80 transition-colors">
+                                    <span>{{ __('Pages') }}</span>
+                                    <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="isGroupOpen('pages') ? 'rotate-180' : ''" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                                </button>
 
+                                <div v-show="isGroupOpen('pages')">
                                 {{-- Homepage --}}
                                 <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer border-t border-gray-100 dark:border-gray-700/50">
                                     <input type="checkbox" :checked="hasHomepage" @change="toggleHomepage()"
@@ -212,15 +216,19 @@
                                         </div>
                                     </div>
                                 </div>
+                                </div>
                             </div>
 
                             {{-- ── MODEL / TAXONOMY sections ── --}}
                             @foreach ($this->getConditionTree() as $modelKey => $modelDef)
                             <div class="border border-gray-200 dark:border-gray-700 rounded-xl">
-                                <div class="px-4 py-2 bg-gray-50 dark:bg-gray-700/60 rounded-t-xl text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                    {{ $modelDef['label'] }}
-                                </div>
+                                <button type="button" @click="toggleGroup('{{ $modelKey }}')"
+                                    class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-700/60 rounded-t-xl text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/80 transition-colors">
+                                    <span>{{ $modelDef['label'] }}</span>
+                                    <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="isGroupOpen('{{ $modelKey }}') ? 'rotate-180' : ''" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                                </button>
 
+                                <div v-show="isGroupOpen('{{ $modelKey }}')">
                                 {{-- All [model] checkbox — mutually exclusive with the others --}}
                                 <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer border-t border-gray-100 dark:border-gray-700/50">
                                     <input type="checkbox"
@@ -313,6 +321,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                </div>
                             </div>
                             @endforeach
 
@@ -342,6 +351,7 @@
 const localName = ref('');
 const localConditions = ref([]);
 const sectionOpen = ref({});
+const groupOpen = ref({});
 const pageSearch = ref('');
 const pageResults = ref([]);
 const taxResults = ref({});
@@ -392,10 +402,21 @@ function getModelRecords(modelKey) {
 
 // ── Reset helpers ─────────────────────────────────────────────────────────────
 
+function isGroupOpen(key) {
+    if (groupOpen.value[key] !== undefined) return groupOpen.value[key];
+    if (key === 'pages') return hasHomepage.value || pageConditions.value.length > 0;
+    return localConditions.value.some(c => c.model === key);
+}
+
+function toggleGroup(key) {
+    groupOpen.value = { ...groupOpen.value, [key]: !isGroupOpen(key) };
+}
+
 function resetModalState() {
     localName.value = '';
     localConditions.value = [];
     sectionOpen.value = {};
+    groupOpen.value = {};
     pageSearch.value = '';
     pageResults.value = [];
     taxResults.value = {};
@@ -578,8 +599,9 @@ function removeModelRecord(modelKey, recordId) {
 }
 
 return {
-    localName, localConditions, sectionOpen, pageSearch, pageResults, taxResults, recordResults,
+    localName, localConditions, sectionOpen, groupOpen, pageSearch, pageResults, taxResults, recordResults,
     hasHomepage, pageConditions, specificPagesOpen,
+    isGroupOpen, toggleGroup,
     handleOpenCreate, handleOpenEdit, handleSave, handleClose,
     hasModelAll, hasModelArchive, isTaxOpen, isSpecificModelOpen, getTaxTerms, getModelRecords,
     toggleHomepage, toggleSpecificPages, toggleModelAll, toggleModelArchive, toggleTaxSection, toggleSpecificModel,

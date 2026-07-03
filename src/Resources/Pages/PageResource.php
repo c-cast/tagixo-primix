@@ -28,7 +28,7 @@ class PageResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->whereNull('source');
+        return parent::getEloquentQuery()->userManaged();
     }
 
     public static function canAccess(): bool

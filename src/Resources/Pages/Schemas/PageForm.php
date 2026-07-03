@@ -2,7 +2,6 @@
 
 namespace Ccast\TagixoPrimix\Resources\Pages\Schemas;
 
-use Ccast\Tagixo\Facades\Tagixo;
 use Ccast\TagixoPrimix\Support\SlugInput;
 use Primix\Forms\Components\Fields\DatePicker;
 use Primix\Forms\Components\Fields\FileUpload;
@@ -57,41 +56,6 @@ class PageForm
                 ->preload()
                 ->nullable(),
 
-            Select::make('template_type')
-                ->label(__('Template Type'))
-                ->options([
-                    'static'   => __('Static'),
-                    'archive'  => __('Archive (all records)'),
-                    'single'   => __('Single (one record per URL)'),
-                    'specific' => __('Specific (fixed record)'),
-                ])
-                ->default('static')
-                ->helperText(__('Static: normal page. Archive: lists all model records. Single: /slug/{record}. Specific: always shows the same record.')),
-
-            Select::make('model_class')
-                ->label(__('Model'))
-                ->options(fn () => collect(Tagixo::getRegisteredModels())
-                    ->mapWithKeys(fn ($m) => [$m['class'] => $m['label']])
-                    ->all())
-                ->searchable()
-                ->preload()
-                ->nullable()
-                ->helperText(__('The Eloquent model that provides data for this template page.'))
-                ->visible(fn ($get) => $get('template_type') !== 'static'),
-
-            Select::make('model_url_key')
-                ->label(__('URL Key'))
-                ->options(fn ($get) => self::resolveModelAttributes($get('model_class')))
-                ->default('id')
-                ->helperText(__('The model attribute used as the URL parameter (e.g. id, slug).'))
-                ->visible(fn ($get) => $get('template_type') === 'single'),
-
-            TextInput::make('model_id')
-                ->label(__('Record ID'))
-                ->numeric()
-                ->nullable()
-                ->helperText(__('The ID of the specific record to display on this page.'))
-                ->visible(fn ($get) => $get('template_type') === 'specific'),
 
             Textarea::make('excerpt')
                 ->label(__('Excerpt'))
