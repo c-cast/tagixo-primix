@@ -3,7 +3,6 @@
 namespace Ccast\TagixoPrimix\Resources\Pages\Tables;
 
 use Ccast\Tagixo\Enums\PageStatus;
-use Ccast\Tagixo\Models\Layout;
 use Ccast\Tagixo\Models\Page;
 use Ccast\TagixoPrimix\Actions\VisualBuilderAction;
 use Ccast\TagixoPrimix\Resources\Pages\PageResource;
@@ -38,31 +37,6 @@ class PagesTable
                         'archived'  => 'danger',
                     ])
                     ->formatStateUsing(fn ($state) => $state instanceof PageStatus ? $state->label() : $state),
-
-                TextColumn::make('layout_label')
-                    ->label(__('Layout'))
-                    ->getStateUsing(function (Page $record): string {
-                        if ($record->layout?->name) {
-                            return $record->layout->name;
-                        }
-
-                        static $globalLayoutName     = null;
-                        static $globalLayoutResolved = false;
-
-                        if (! $globalLayoutResolved) {
-                            $globalLayoutName     = Layout::global()?->name;
-                            $globalLayoutResolved = true;
-                        }
-
-                        if ($globalLayoutName) {
-                            return __('Global: :name', ['name' => $globalLayoutName]);
-                        }
-
-                        return __('No layout');
-                    })
-                    ->badge()
-                    ->color(fn (Page $record): string => $record->layout_id ? 'primary' : 'gray')
-                    ->toggleable(),
 
                 TextColumn::make('published_at')
                     ->label(__('Published'))
@@ -100,10 +74,6 @@ class PagesTable
                         'archived'  => __('Archived'),
                     ]),
 
-                SelectFilter::make('layout_id')
-                    ->label(__('Layout'))
-                    ->relationship('layout', 'name')
-                    ->searchable(),
             ])
             ->actions([
                 EditAction::make(),

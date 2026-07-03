@@ -2,6 +2,7 @@
 
 namespace Ccast\TagixoPrimix;
 
+use Ccast\TagixoPrimix\Pages\ThemeBuilderPage;
 use Ccast\TagixoPrimix\Resources\Forms\FormResource;
 use Ccast\TagixoPrimix\Resources\GlobalBlocks\GlobalBlockResource;
 use Ccast\TagixoPrimix\Resources\LayoutResource;
@@ -12,6 +13,8 @@ use Ccast\TagixoPrimix\Resources\Pages\PageResource;
 use Ccast\TagixoPrimix\Resources\Pdfs\PdfResource;
 use Ccast\TagixoPrimix\Resources\Popups\PopupResource;
 use Ccast\TagixoPrimix\Resources\Sliders\SliderResource;
+use Ccast\Tagixo\Contracts\HasPlugin;
+use Ccast\Tagixo\Tagixo;
 use Primix\Contracts\Plugin;
 use Primix\Panel;
 
@@ -52,7 +55,7 @@ class TagixoPrimixPlugin implements Plugin
         }
 
         $panel->resources($resources);
-
+        $panel->pages([ThemeBuilderPage::class]);
     }
 
     /**
@@ -75,7 +78,18 @@ class TagixoPrimixPlugin implements Plugin
 
     public function boot(Panel $panel): void
     {
-        //
+        foreach (app(Tagixo::class)->getPlugins() as $plugin) {
+            if (! ($plugin instanceof HasPlugin)) {
+                continue;
+            }
+
+            $sub = $plugin->getPlugin();
+
+            if ($sub instanceof Plugin) {
+                $sub->register($panel);
+                $sub->boot($panel);
+            }
+        }
     }
 
     public static function make(): static

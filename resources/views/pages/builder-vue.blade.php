@@ -160,6 +160,13 @@
         refreshBuilderStyles(e.detail.structure);
     });
 
+    // The initial stylesheet is already injected inline by PHP (getInitialStylesheet()).
+    // Set a flag first so App.vue can detect the event was already fired even if it
+    // registers its listener after this script runs (module scripts are deferred,
+    // so @script may execute before Vue's onMounted registers the event listener).
+    window.__tagixoStylesApplied = true;
+    window.dispatchEvent(new CustomEvent('tagixo:styles-applied'));
+
     refreshBuilderStyles();
 
     const livue = resolveBuilderLivueBridge()

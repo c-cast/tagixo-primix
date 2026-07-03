@@ -98,7 +98,7 @@ class BuildPage extends PrimixVisualBuilderPage
     public function getPageAttributesForVue(): array
     {
         $record          = $this->record;
-        $effectiveLayout = $record->getEffectiveLayout();
+        $effectiveLayout = app(\Ccast\Tagixo\Services\LayoutResolver::class)->resolve($record);
 
         return [
             ['key' => 'title',            'label' => __('Title'),            'value' => $record->title,            'type' => 'string'],
@@ -107,7 +107,6 @@ class BuildPage extends PrimixVisualBuilderPage
             ['key' => 'meta_title',       'label' => __('Meta Title'),       'value' => $record->meta_title,       'type' => 'string'],
             ['key' => 'meta_description', 'label' => __('Meta Description'), 'value' => $record->meta_description, 'type' => 'text'],
             ['key' => 'status',           'label' => __('Status'),           'value' => $record->status?->value,   'type' => 'string'],
-            ['key' => 'layout_id',        'label' => __('Layout ID'),        'value' => $record->layout_id,        'type' => 'number'],
             ['key' => 'layout_name',      'label' => __('Layout'),           'value' => $effectiveLayout?->name,   'type' => 'string'],
             ['key' => 'url',              'label' => __('URL'),              'value' => $record->url,              'type' => 'string'],
         ];

@@ -21,10 +21,34 @@ class BuildLayout extends PrimixVisualBuilderPage
         return 'page';
     }
 
+    /**
+     * Inject a pre-populated layout frame with enabled:true so the Vue builder
+     * skips the GET /tagixo/builder/layout-frame fetch. Without this, the fetch
+     * would use the Layout model ID to look up a Page with the same numeric ID,
+     * loading entirely wrong content into the canvas.
+     */
+    public function getLayoutFrameForVue(): array
+    {
+        // Pass null structure for all scopes so the builder falls back to
+        // data.structure (populated by loadStructure()) for the canvas body.
+        // A non-null empty structure would override loadStructure() output.
+        // The 'body' scope chip always shows in BuilderToolbar (filtered by scope==='body').
+        // We label it with the actual section being edited so the chip shows the right name.
+        $sectionLabel = __(['header' => 'Header', 'body' => 'Body', 'footer' => 'Footer'][$this->section] ?? 'Body');
+
+        return [
+            'enabled'     => true,
+            'activeScope' => 'body',
+            'body'   => ['scope' => 'body',   'label' => $sectionLabel, 'available' => true,  'editable' => true,  'previewHtml' => '', 'previewCss' => '', 'structure' => null],
+            'header' => ['scope' => 'header', 'label' => __('Header'),  'available' => false, 'editable' => false, 'previewHtml' => '', 'previewCss' => '', 'structure' => null],
+            'footer' => ['scope' => 'footer', 'label' => __('Footer'),  'available' => false, 'editable' => false, 'previewHtml' => '', 'previewCss' => '', 'structure' => null],
+        ];
+    }
+
     public function mount(int|string $record, ?string $section = 'header'): void
     {
         $this->record = $this->resolveRecord($record);
-        $this->section = in_array($section, ['header', 'footer']) ? $section : 'header';
+        $this->section = in_array($section, ['header', 'body', 'footer']) ? $section : 'header';
         $this->authorizeAccess();
         $this->initializeVisualBuilder();
     }
@@ -70,7 +94,7 @@ class BuildLayout extends PrimixVisualBuilderPage
 
     public function getTitle(): string
     {
-        $sectionLabel = __($this->section === 'header' ? 'Header' : 'Footer');
+        $sectionLabel = __(['header' => 'Header', 'body' => 'Body', 'footer' => 'Footer'][$this->section] ?? 'Header');
 
         return "{$this->record->name} — {$sectionLabel}";
     }
@@ -78,6 +102,11 @@ class BuildLayout extends PrimixVisualBuilderPage
     public function getHeading(): string
     {
         return $this->getTitle();
+    }
+
+    public function getBackUrl(): ?string
+    {
+        return \Ccast\TagixoPrimix\Pages\ThemeBuilderPage::getUrl();
     }
 
     public function getPageAttributesForVue(): array
@@ -100,22 +129,34 @@ class BuildLayout extends PrimixVisualBuilderPage
 
     protected function getHeaderActions(): array
     {
-        return [
+        $actions = [
             Action::make('edit_header')
                 ->label(__('Header'))
                 ->icon('heroicon-o-paint-brush')
                 ->color($this->section === 'header' ? 'primary' : 'gray')
                 ->url(fn () => LayoutResource::getUrl('build', ['record' => $this->record, 'section' => 'header'])),
-            Action::make('edit_footer')
+        ];
+
+        if (! $this->record->is_global) {
+            $actions[] = Action::make('edit_body')
+                ->label(__('Body'))
+                ->icon('heroicon-o-paint-brush')
+                ->color($this->section === 'body' ? 'primary' : 'gray')
+                ->url(fn () => LayoutResource::getUrl('build', ['record' => $this->record, 'section' => 'body']));
+        }
+
+        $actions[] = Action::make('edit_footer')
                 ->label(__('Footer'))
                 ->icon('heroicon-o-paint-brush')
                 ->color($this->section === 'footer' ? 'primary' : 'gray')
-                ->url(fn () => LayoutResource::getUrl('build', ['record' => $this->record, 'section' => 'footer'])),
-            Action::make('back_to_layout')
-                ->label(__('Layout Settings'))
-                ->icon('heroicon-o-arrow-left')
-                ->color('gray')
-                ->url(fn () => LayoutResource::getUrl('edit', ['record' => $this->record])),
-        ];
+                ->url(fn () => LayoutResource::getUrl('build', ['record' => $this->record, 'section' => 'footer']));
+
+        $actions[] = Action::make('back_to_layout')
+            ->label(__('Layout Settings'))
+            ->icon('heroicon-o-arrow-left')
+            ->color('gray')
+            ->url(fn () => LayoutResource::getUrl('edit', ['record' => $this->record]));
+
+        return $actions;
     }
 }

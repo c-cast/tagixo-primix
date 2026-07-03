@@ -3,7 +3,6 @@
 namespace Ccast\TagixoPrimix\Resources\Pages\Schemas;
 
 use Ccast\Tagixo\Facades\Tagixo;
-use Ccast\Tagixo\Models\Layout;
 use Ccast\TagixoPrimix\Support\SlugInput;
 use Primix\Forms\Components\Fields\DatePicker;
 use Primix\Forms\Components\Fields\FileUpload;
@@ -55,16 +54,8 @@ class PageForm
                 ->label(__('Parent Page'))
                 ->relationship('parent', 'title')
                 ->searchable()
-                ->nullable(),
-
-            Select::make('layout_id')
-                ->label(__('Layout'))
-                ->options(fn () => Layout::query()->orderBy('name')->pluck('name', 'id')->all())
-                ->searchable()
                 ->preload()
-                ->required()
-                ->default(fn () => Layout::global()?->id)
-                ->helperText(__('Other layouts override the header/footer; empty sections fall back to the Global Layout.')),
+                ->nullable(),
 
             Select::make('template_type')
                 ->label(__('Template Type'))
@@ -83,6 +74,7 @@ class PageForm
                     ->mapWithKeys(fn ($m) => [$m['class'] => $m['label']])
                     ->all())
                 ->searchable()
+                ->preload()
                 ->nullable()
                 ->helperText(__('The Eloquent model that provides data for this template page.'))
                 ->visible(fn ($get) => $get('template_type') !== 'static'),
