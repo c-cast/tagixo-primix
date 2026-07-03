@@ -9,6 +9,7 @@ use Ccast\TagixoPrimix\Resources\Pages\Pages\EditPage;
 use Ccast\TagixoPrimix\Resources\Pages\Pages\ListPages;
 use Ccast\TagixoPrimix\Resources\Pages\Schemas\PageForm;
 use Ccast\TagixoPrimix\Resources\Pages\Tables\PagesTable;
+use Illuminate\Database\Eloquent\Builder;
 use Primix\Forms\Form;
 use Primix\Resources\Resource;
 use Primix\Tables\Table;
@@ -24,6 +25,11 @@ class PageResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static ?string $navigationGroup = 'Visual Builder';
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->whereNull('source');
+    }
 
     public static function canAccess(): bool
     {
