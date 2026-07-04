@@ -35,6 +35,8 @@
             data-record-id="{{ $recordKey }}"
         @endif
         data-global-variables="{{ json_encode($this->getGlobalVariablesForVue()) }}"
+        data-data-models="{{ json_encode($this->getDataModelsForVue()) }}"
+        data-bound-model="{{ json_encode($this->getBoundModelForVue()) }}"
         data-page-attributes="{{ json_encode($this->getPageAttributesForVue()) }}"
         data-translations="{{ json_encode($this->getTranslationsForVue()) }}"
         data-available-icons="{{ json_encode($this->getAvailableIconsForVue()) }}"
