@@ -2,10 +2,11 @@
 
 namespace Ccast\TagixoPrimix\Resources\Layouts\Pages;
 
-use Ccast\TagixoPrimix\Resources\LayoutResource;
-use Ccast\TagixoPrimix\Pages\PrimixVisualBuilderPage;
-use Ccast\TagixoPrimix\Concerns\CleansBuilderStructure;
+use Ccast\Tagixo\Builder\LayoutPreviewResolver;
 use Ccast\Tagixo\Renderers\PageRenderer;
+use Ccast\TagixoPrimix\Concerns\CleansBuilderStructure;
+use Ccast\TagixoPrimix\Pages\PrimixVisualBuilderPage;
+use Ccast\TagixoPrimix\Resources\LayoutResource;
 use Primix\Actions\Action;
 
 class BuildLayout extends PrimixVisualBuilderPage
@@ -102,6 +103,11 @@ class BuildLayout extends PrimixVisualBuilderPage
     public function getHeading(): string
     {
         return $this->getTitle();
+    }
+
+    public function getPreviewUrl(): ?string
+    {
+        return app(LayoutPreviewResolver::class)->resolve($this->record);
     }
 
     public function getBackUrl(): ?string
