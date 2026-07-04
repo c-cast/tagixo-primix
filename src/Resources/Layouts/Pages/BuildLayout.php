@@ -4,6 +4,7 @@ namespace Ccast\TagixoPrimix\Resources\Layouts\Pages;
 
 use Ccast\Tagixo\Builder\LayoutPreviewResolver;
 use Ccast\Tagixo\Renderers\PageRenderer;
+use Ccast\Tagixo\Services\BuilderModelRegistryService;
 use Ccast\TagixoPrimix\Concerns\CleansBuilderStructure;
 use Ccast\TagixoPrimix\Pages\PrimixVisualBuilderPage;
 use Ccast\TagixoPrimix\Resources\LayoutResource;
@@ -44,6 +45,33 @@ class BuildLayout extends PrimixVisualBuilderPage
             'header' => ['scope' => 'header', 'label' => __('Header'),  'available' => false, 'editable' => false, 'previewHtml' => '', 'previewCss' => '', 'structure' => null],
             'footer' => ['scope' => 'footer', 'label' => __('Footer'),  'available' => false, 'editable' => false, 'previewHtml' => '', 'previewCss' => '', 'structure' => null],
         ];
+    }
+
+    /**
+     * Return the first model/taxonomy referenced in the layout conditions, so
+     * the Vue builder restricts the model-binding picker to the relevant model.
+     */
+    public function getBoundModelForVue(): ?array
+    {
+        $conditions = $this->record->conditions ?? [];
+        $modelKey = null;
+
+        foreach ($conditions as $condition) {
+            if (! empty($condition['model'])) {
+                $modelKey = $condition['model'];
+                break;
+            }
+            if (! empty($condition['taxonomy'])) {
+                $modelKey = $condition['taxonomy'];
+                break;
+            }
+        }
+
+        if (! $modelKey) {
+            return null;
+        }
+
+        return app(BuilderModelRegistryService::class)->resolveModel($modelKey);
     }
 
     public function mount(int|string $record, ?string $section = 'header'): void

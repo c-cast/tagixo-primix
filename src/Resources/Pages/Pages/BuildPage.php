@@ -3,6 +3,7 @@
 namespace Ccast\TagixoPrimix\Resources\Pages\Pages;
 
 use Ccast\Tagixo\Renderers\PageRenderer;
+use Ccast\Tagixo\Services\BuilderModelRegistryService;
 use Ccast\TagixoPrimix\Concerns\CleansBuilderStructure;
 use Ccast\TagixoPrimix\Pages\PrimixVisualBuilderPage;
 use Ccast\TagixoPrimix\Resources\Pages\PageResource;
@@ -28,6 +29,28 @@ class BuildPage extends PrimixVisualBuilderPage
     protected function authorizeAccess(): void
     {
         // No specific authorization for now
+    }
+
+    /**
+     * Return the model this page is bound to, so the Vue builder can restrict
+     * the model-binding picker to the relevant model only.
+     */
+    public function getBoundModelForVue(): ?array
+    {
+        $modelClass = $this->record->model_class ?? null;
+        if (! $modelClass) {
+            return null;
+        }
+
+        $registry = app(BuilderModelRegistryService::class);
+
+        foreach ($registry->listRegisteredModels() as $model) {
+            if ($model['class'] === $modelClass) {
+                return $registry->resolveModel($model['key']);
+            }
+        }
+
+        return null;
     }
 
     /**
