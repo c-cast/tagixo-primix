@@ -4,6 +4,8 @@ namespace Ccast\TagixoPrimix;
 
 use Ccast\TagixoPrimix\Console\Commands\MakeBuilderPageCommand;
 use Illuminate\Support\ServiceProvider;
+use LiVue\Features\SupportAssets\AssetManager as LiVueAssetManager;
+use LiVue\Features\SupportAssets\Js;
 
 class TagixoPrimixServiceProvider extends ServiceProvider
 {
@@ -15,6 +17,13 @@ class TagixoPrimixServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'tagixo-primix');
+
+        $this->app->booted(function () {
+            $assetManager = $this->app->make(LiVueAssetManager::class);
+            $assetManager->register([
+                Js::make('tagixo-media-picker', '/vendor/tagixo/media-picker.js')->module(),
+            ], 'tagixo-primix');
+        });
 
         $this->publishes([
             __DIR__.'/../config/tagixo-primix.php' => config_path('tagixo-primix.php'),

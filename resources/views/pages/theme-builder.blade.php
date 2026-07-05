@@ -115,7 +115,7 @@
                                 <x-heroicon-o-cog-6-tooth class="w-4 h-4"/>
                                 {{ __('Settings') }}
                             </button>
-                            <button v-click:deleteLayout.confirm="{{ $layout->id }}"
+                            <button v-click.confirm="['deleteLayout', '{{ $layout->id }}']"
                                 class="inline-flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 px-2 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ml-auto">
                                 <x-heroicon-o-trash class="w-4 h-4"/>
                                 {{ __('Delete') }}
