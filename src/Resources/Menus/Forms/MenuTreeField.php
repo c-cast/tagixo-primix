@@ -4,7 +4,7 @@ namespace Ccast\TagixoPrimix\Resources\Menus\Forms;
 
 use Ccast\Tagixo\Enums\MenuItemTargetType;
 use Ccast\Tagixo\Models\Page;
-use Ccast\TagixoPrimix\Support\MenuTreeStructure;
+use Ccast\Tagixo\Support\MenuTreeStructure;
 use Primix\Forms\Components\Fields\ViewField;
 
 /**

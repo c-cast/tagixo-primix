@@ -3,14 +3,11 @@
 namespace Ccast\TagixoPrimix\Resources\Mails\Pages;
 
 use Ccast\Tagixo\Renderers\MailRenderer;
-use Ccast\TagixoPrimix\Concerns\CleansBuilderStructure;
 use Ccast\TagixoPrimix\Pages\PrimixVisualBuilderPage;
 use Ccast\TagixoPrimix\Resources\Mails\MailResource;
 
 class BuildMail extends PrimixVisualBuilderPage
 {
-    use CleansBuilderStructure;
-
     protected static ?string $resource = MailResource::class;
 
     public function getContext(): string
@@ -41,7 +38,6 @@ class BuildMail extends PrimixVisualBuilderPage
     public function saveStructure(string $structure): void
     {
         $decoded = json_decode($structure, true);
-        $decoded = $this->cleanStructure($decoded);
 
         $extraCss = is_string($decoded['css'] ?? null) ? $decoded['css'] : '';
 

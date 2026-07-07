@@ -4,14 +4,11 @@ namespace Ccast\TagixoPrimix\Resources\Pages\Pages;
 
 use Ccast\Tagixo\Renderers\PageRenderer;
 use Ccast\Tagixo\Services\BuilderModelRegistryService;
-use Ccast\TagixoPrimix\Concerns\CleansBuilderStructure;
 use Ccast\TagixoPrimix\Pages\PrimixVisualBuilderPage;
 use Ccast\TagixoPrimix\Resources\Pages\PageResource;
 
 class BuildPage extends PrimixVisualBuilderPage
 {
-    use CleansBuilderStructure;
-
     protected static ?string $resource = PageResource::class;
 
     /**
@@ -77,7 +74,6 @@ class BuildPage extends PrimixVisualBuilderPage
     public function saveStructure(string $structure): void
     {
         $decoded = json_decode($structure, true);
-        $decoded = $this->cleanStructure($decoded);
 
         $renderer = app(PageRenderer::class);
         $result   = $renderer->renderFromJson($decoded);

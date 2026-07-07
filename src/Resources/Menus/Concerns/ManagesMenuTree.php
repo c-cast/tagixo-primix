@@ -2,7 +2,7 @@
 
 namespace Ccast\TagixoPrimix\Resources\Menus\Concerns;
 
-use Ccast\TagixoPrimix\Support\MenuTreeStructure;
+use Ccast\Tagixo\Support\MenuTreeStructure;
 
 /**
  * LiVue methods + reactive state powering the WordPress-style menu tree on the

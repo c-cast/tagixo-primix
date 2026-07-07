@@ -5,15 +5,12 @@ namespace Ccast\TagixoPrimix\Resources\Layouts\Pages;
 use Ccast\Tagixo\Builder\LayoutPreviewResolver;
 use Ccast\Tagixo\Renderers\PageRenderer;
 use Ccast\Tagixo\Services\BuilderModelRegistryService;
-use Ccast\TagixoPrimix\Concerns\CleansBuilderStructure;
 use Ccast\TagixoPrimix\Pages\PrimixVisualBuilderPage;
 use Ccast\TagixoPrimix\Resources\LayoutResource;
 use Primix\Actions\Action;
 
 class BuildLayout extends PrimixVisualBuilderPage
 {
-    use CleansBuilderStructure;
-
     protected static ?string $resource = LayoutResource::class;
 
     public string $section = 'header';
@@ -101,7 +98,6 @@ class BuildLayout extends PrimixVisualBuilderPage
     public function saveStructure(string $structure): void
     {
         $decoded = json_decode($structure, true);
-        $decoded = $this->cleanStructure($decoded);
 
         $renderer = app(PageRenderer::class);
         $result   = $renderer->renderFromJson($decoded);

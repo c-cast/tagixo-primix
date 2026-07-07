@@ -3,10 +3,11 @@
 namespace Ccast\TagixoPrimix\Resources\Menus\Pages;
 
 use Ccast\Tagixo\Models\Menu;
+use Ccast\Tagixo\Models\Page;
+use Ccast\Tagixo\Services\MenuItemsTreePersister;
+use Ccast\Tagixo\Support\MenuTreeStructure;
 use Ccast\TagixoPrimix\Resources\Menus\Concerns\ManagesMenuTree;
-use Ccast\TagixoPrimix\Resources\Menus\Concerns\PersistsMenuItems;
 use Ccast\TagixoPrimix\Resources\MenuResource;
-use Ccast\TagixoPrimix\Support\MenuTreeStructure;
 use Illuminate\Validation\Rule;
 use Primix\Notifications\Notification;
 use Primix\Resources\Actions\DeleteAction;
@@ -15,7 +16,6 @@ use Primix\Resources\Pages\EditRecord;
 class EditMenu extends EditRecord
 {
     use ManagesMenuTree;
-    use PersistsMenuItems;
 
     protected static ?string $resource = MenuResource::class;
 
@@ -30,9 +30,9 @@ class EditMenu extends EditRecord
     {
         /** @var Menu $record */
         $record = $this->record;
-        // Persistence stores a nested tree; the tree field edits a flat list
-        // with per-item depth. Flatten on the way in.
-        $data['items'] = MenuTreeStructure::treeToFlat($this->menuItemsToTree($record));
+        $tree = app(MenuItemsTreePersister::class)->toTree($record);
+        $tree = $this->restorePageIds($tree);
+        $data['items'] = MenuTreeStructure::treeToFlat($tree);
 
         return $data;
     }
@@ -62,10 +62,9 @@ class EditMenu extends EditRecord
 
         $this->record->update($attributeData);
 
-        // Rebuild the nested tree from the flat (depth-carrying) editor state
-        // before handing it to the persistence layer.
         $tree = MenuTreeStructure::flatToTree(is_array($items) ? $items : []);
-        $this->persistMenuItems($this->record, $tree);
+        $tree = $this->foldPageIds($tree);
+        app(MenuItemsTreePersister::class)->persist($this->record, $tree);
 
         $this->record->refresh();
         $this->data = $form->fillWithRelationships(
@@ -77,5 +76,39 @@ class EditMenu extends EditRecord
             ->title(__('primix::panel.notifications.saved'))
             ->success()
             ->send();
+    }
+
+    /**
+     * Fold target_page_id into target_value before handing the tree to the core persister.
+     */
+    private function foldPageIds(array $items): array
+    {
+        return array_map(function (array $item) {
+            if (($item['target_type'] ?? null) === 'page' && ! empty($item['target_page_id'])) {
+                $item['target_value'] = $item['target_page_id'];
+            }
+            if (isset($item['children']) && is_array($item['children'])) {
+                $item['children'] = $this->foldPageIds($item['children']);
+            }
+            return $item;
+        }, $items);
+    }
+
+    /**
+     * Restore target_page_id from target_value for the Primix page picker.
+     */
+    private function restorePageIds(array $items): array
+    {
+        return array_map(function (array $item) {
+            if (($item['target_type'] ?? null) === 'page' && ! empty($item['target_value'])) {
+                $item['target_page_id'] = is_numeric($item['target_value'])
+                    ? (int) $item['target_value']
+                    : Page::where('slug', $item['target_value'])->value('id');
+            }
+            if (isset($item['children']) && is_array($item['children'])) {
+                $item['children'] = $this->restorePageIds($item['children']);
+            }
+            return $item;
+        }, $items);
     }
 }

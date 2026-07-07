@@ -3,14 +3,11 @@
 namespace Ccast\TagixoPrimix\Resources\Pdfs\Pages;
 
 use Ccast\Tagixo\Renderers\PdfRenderer;
-use Ccast\TagixoPrimix\Concerns\CleansBuilderStructure;
 use Ccast\TagixoPrimix\Pages\PrimixVisualBuilderPage;
 use Ccast\TagixoPrimix\Resources\Pdfs\PdfResource;
 
 class BuildPdf extends PrimixVisualBuilderPage
 {
-    use CleansBuilderStructure;
-
     protected static ?string $resource = PdfResource::class;
 
     public function getContext(): string
@@ -41,7 +38,6 @@ class BuildPdf extends PrimixVisualBuilderPage
     public function saveStructure(string $structure): void
     {
         $decoded = json_decode($structure, true);
-        $decoded = $this->cleanStructure($decoded);
 
         $extraCss = is_string($decoded['css'] ?? null) ? $decoded['css'] : '';
 

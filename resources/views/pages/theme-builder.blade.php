@@ -193,7 +193,7 @@
                                 </label>
 
                                 {{-- Specific Pages search (shown when checkbox is on) --}}
-                                <div v-if="specificPagesOpen" class="px-4 pb-3 pl-11 space-y-2 border-t border-gray-100 dark:border-gray-700/50">
+                                <div v-if="specificPagesOpen" class="px-4 py-3 space-y-2 border-t border-gray-100 dark:border-gray-700/50">
                                     <div class="flex flex-wrap gap-1.5 mt-2" v-if="pageConditions.length > 0">
                                         <span v-for="c in pageConditions" :key="c.value"
                                             class="inline-flex items-center gap-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 pl-2 pr-1 py-0.5 rounded-full">
@@ -261,7 +261,7 @@
 
                                     {{-- Taxonomy search (shown when checkbox is on) --}}
                                     <div v-if="isTaxOpen('{{ $modelKey }}', '{{ $taxKey }}')"
-                                        class="px-4 pb-3 pl-11 space-y-2 border-t border-gray-100 dark:border-gray-700/50">
+                                        class="px-4 py-3 space-y-2 border-t border-gray-100 dark:border-gray-700/50">
                                         <div class="flex flex-wrap gap-1.5 mt-2" v-if="getTaxTerms('{{ $modelKey }}', '{{ $taxKey }}').length > 0">
                                             <span v-for="c in getTaxTerms('{{ $modelKey }}', '{{ $taxKey }}')" :key="c.term_id"
                                                 class="inline-flex items-center gap-1 text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 pl-2 pr-1 py-0.5 rounded-full">
@@ -298,7 +298,7 @@
 
                                 {{-- Specific record search (shown when checkbox is on) --}}
                                 <div v-if="isSpecificModelOpen('{{ $modelKey }}')"
-                                    class="px-4 pb-3 pl-11 space-y-2 border-t border-gray-100 dark:border-gray-700/50">
+                                    class="px-4 py-3 space-y-2 border-t border-gray-100 dark:border-gray-700/50">
                                     <div class="flex flex-wrap gap-1.5 mt-2" v-if="getModelRecords('{{ $modelKey }}').length > 0">
                                         <span v-for="c in getModelRecords('{{ $modelKey }}')" :key="c.model_id"
                                             class="inline-flex items-center gap-1 text-xs bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 pl-2 pr-1 py-0.5 rounded-full">
