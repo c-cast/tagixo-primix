@@ -152,6 +152,18 @@
                     {{ __('Visible') }}
                 </label>
             </div>
+
+            <div class="flex flex-col gap-1" v-if="editingItem.depth === 0">
+                <label class="text-sm font-medium text-surface-700 dark:text-surface-200">{{ __('Dropdown type') }}</label>
+                <p-select
+                    v-model="editingItem.dropdown_type"
+                    :options="{!! Js::from($dropdownTypeOptions ?? []) !!}"
+                    option-label="label"
+                    option-value="value"
+                    fluid
+                ></p-select>
+                <small class="text-surface-400">{{ __('Choose "Mega menu" to render this item\'s children as a wide panel with columns.') }}</small>
+            </div>
         </div>
 
         <template #footer>

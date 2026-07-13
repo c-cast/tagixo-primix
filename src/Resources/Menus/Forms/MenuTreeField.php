@@ -32,6 +32,7 @@ class MenuTreeField extends ViewField
             'linkTypeOptions' => static::linkTypeOptions(),
             'pageOptions' => static::pageOptions(),
             'blankItem' => MenuTreeStructure::blankItem(),
+            'dropdownTypeOptions' => static::dropdownTypeOptions(),
         ]);
     }
 
@@ -49,6 +50,17 @@ class MenuTreeField extends ViewField
         }
 
         return $options;
+    }
+
+    /**
+     * @return array<int, array{value: string|null, label: string}>
+     */
+    protected static function dropdownTypeOptions(): array
+    {
+        return [
+            ['value' => null, 'label' => __('Dropdown (default)')],
+            ['value' => 'mega', 'label' => __('Mega menu')],
+        ];
     }
 
     /**
