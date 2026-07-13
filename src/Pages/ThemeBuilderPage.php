@@ -107,7 +107,66 @@ class ThemeBuilderPage extends Page
 
     public function getBuildUrl(int $layoutId, string $section): string
     {
+        // Body of a model-scoped template: create the special page lazily and
+        // edit THAT page. Mirrors tagixo-filament's ThemeBuilderPage.
+        if ($section === 'body') {
+            $layout = Layout::find($layoutId);
+            $target = $this->resolveModelPageTarget($layout?->conditions ?? []);
+
+            if ($target !== null) {
+                [$modelKey, $templateType] = $target;
+                $page = \Ccast\Tagixo\Facades\Tagixo::ensureRoutePagesForModel($modelKey)[$templateType] ?? null;
+
+                if ($page !== null) {
+                    return \Ccast\TagixoPrimix\Resources\Pages\PageResource::getUrl('build', ['record' => $page]);
+                }
+            }
+        }
+
         return LayoutResource::getUrl('build', ['record' => $layoutId, 'section' => $section]);
+    }
+
+    /**
+     * Whether the template's Body is configured (model-scoped templates check
+     * the special page's content). Mirrors tagixo-filament — keep in sync.
+     */
+    public function isBodyConfigured($layout): bool
+    {
+        $target = $this->resolveModelPageTarget($layout->conditions ?? []);
+
+        if ($target !== null) {
+            [$modelKey, $templateType] = $target;
+            $page = \Ccast\Tagixo\Facades\Tagixo::findRoutePagesForModel($modelKey)[$templateType] ?? null;
+
+            return $page !== null && ! empty($page->content['components'] ?? null);
+        }
+
+        return (bool) $layout->body_rendered_html;
+    }
+
+    /**
+     * @param  array<int, mixed>  $conditions
+     * @return array{0: string, 1: string}|null
+     */
+    protected function resolveModelPageTarget(array $conditions): ?array
+    {
+        foreach ($conditions as $condition) {
+            if (! is_array($condition) || empty($condition['model'])) {
+                continue;
+            }
+
+            $type = $condition['type'] ?? null;
+
+            if ($type === 'model_archive') {
+                return [(string) $condition['model'], 'archive'];
+            }
+
+            if (in_array($type, ['model_all', 'model_taxonomy', 'model_record'], true)) {
+                return [(string) $condition['model'], 'single'];
+            }
+        }
+
+        return null;
     }
 
     public function getConditionTree(): array

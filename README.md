@@ -31,6 +31,14 @@ $panel->plugin(
 );
 ```
 
+## Pages resource
+
+The Pages resource lists both user-managed pages and the source-synced model template pages (no global `userManaged()` scope). A **Type** filter (`Pages` / `Model templates`) in the pages table separates the two kinds.
+
+## Theme Builder
+
+Behaviour is at parity with the Filament SDK (`getBuildUrl` / `isBodyConfigured` / `resolveModelPageTarget`): opening the Body of a model-scoped template lazily creates the underlying special page (`model_archive` → archive; `model_all` / `taxonomy` / `record` → single, via `Tagixo::ensureRoutePagesForModel()`) and opens its builder directly; the "configured" state reflects the actual page content.
+
 ## License
 
 MIT
