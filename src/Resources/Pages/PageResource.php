@@ -28,7 +28,10 @@ class PageResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->userManaged();
+        // No global userManaged() scope: the table's "Type" filter separates
+        // user pages from model template pages (source-synced), so templates
+        // stay reachable in the builder. Mirrors tagixo-filament's tabs.
+        return parent::getEloquentQuery();
     }
 
     public static function canAccess(): bool

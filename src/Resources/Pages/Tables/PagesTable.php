@@ -65,6 +65,20 @@ class PagesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('page_kind')
+                    ->label(__('Type'))
+                    ->options([
+                        'pages'     => __('Pages'),
+                        'templates' => __('Model templates'),
+                    ])
+                    ->query(function ($query, $value) {
+                        return match ($value) {
+                            'pages'     => $query->whereNull('source'),
+                            'templates' => $query->whereNotNull('source'),
+                            default     => $query,
+                        };
+                    }),
+
                 SelectFilter::make('status')
                     ->label(__('Status'))
                     ->options([
