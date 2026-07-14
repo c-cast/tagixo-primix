@@ -15,6 +15,7 @@ use Ccast\TagixoPrimix\Resources\Popups\PopupResource;
 use Ccast\TagixoPrimix\Resources\Sliders\SliderResource;
 use Ccast\Tagixo\Contracts\HasPlugin;
 use Ccast\Tagixo\Tagixo;
+use Ccast\TagixoPrimix\Forms\PropTypes\PrimixTablePropType;
 use Primix\Contracts\Plugin;
 use Primix\Panel;
 
@@ -83,6 +84,8 @@ class TagixoPrimixPlugin implements Plugin
         if ($this->formTarget !== null) {
             app(Tagixo::class)->lockFormTarget($this->formTarget);
         }
+
+        app(Tagixo::class)->extendFormModule('*', ['table' => PrimixTablePropType::class]);
 
         foreach (app(Tagixo::class)->getPlugins() as $plugin) {
             if (! ($plugin instanceof HasPlugin)) {
