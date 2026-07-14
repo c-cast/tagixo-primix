@@ -86,6 +86,7 @@ class TagixoPrimixPlugin implements Plugin
         }
 
         app(Tagixo::class)->extendFormModule('*', ['table' => PrimixTablePropType::class]);
+        app(Tagixo::class)->hideFormModulePropTypes('*', ['sizing']);
 
         foreach (app(Tagixo::class)->getPlugins() as $plugin) {
             if (! ($plugin instanceof HasPlugin)) {
