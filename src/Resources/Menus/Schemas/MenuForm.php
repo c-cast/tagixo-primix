@@ -35,11 +35,6 @@ class MenuForm
                         ->maxLength(500)
                         ->nullable(),
 
-                    TextInput::make('css_class')
-                        ->label(__('Wrapper CSS class'))
-                        ->nullable()
-                        ->placeholder(__('e.g. navbar-primary'))
-                        ->helperText(__('Applied to the <nav> wrapper when the menu is rendered.')),
                 ]),
 
             Section::make(__('Items'))

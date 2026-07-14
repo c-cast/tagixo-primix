@@ -10,6 +10,7 @@
     <div class="menu-tree-list flex flex-col" data-menu-tree-list>
         <template v-for="(item, i) in {{ $statePath }}" :key="item._key || i">
             <div
+                v-show="!isHidden({{ $statePath }}, i)"
                 class="menu-tree-row group flex items-center gap-2 mb-1 rounded-md bg-[var(--p-content-background)] ring-1 ring-[var(--p-content-border-color)]"
                 :data-index="i"
                 :data-depth="item.depth || 0"
@@ -24,6 +25,17 @@
                     paddingBottom: '0.5rem',
                 }"
             >
+                <button
+                    v-if="hasChildren({{ $statePath }}, i)"
+                    type="button"
+                    @click="toggleCollapse({{ $statePath }}, item, i)"
+                    :title="collapsedKeys.has(itemKey(item, i)) ? '{{ __('Expand') }}' : '{{ __('Collapse') }}'"
+                    style="background:none;border:none;padding:2px;cursor:pointer;color:var(--p-text-muted-color);line-height:1;flex-shrink:0;"
+                >
+                    <i :class="collapsedKeys.has(itemKey(item, i)) ? 'pi pi-chevron-right' : 'pi pi-chevron-down'" style="font-size:0.65rem;"></i>
+                </button>
+                <span v-else style="width:1rem;flex-shrink:0;display:inline-block;"></span>
+
                 <span
                     class="menu-tree-handle cursor-move text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 shrink-0"
                     title="{{ __('Drag to reorder — drag right/left to change level') }}"
@@ -35,6 +47,13 @@
                     <span v-if="item.label" v-text="item.label"></span>
                     <span v-else class="italic text-surface-400">{{ __('Untitled item') }}</span>
                 </span>
+
+                <p-tag
+                    v-if="item.dropdown_type === 'mega'"
+                    value="{{ __('Mega menu') }}"
+                    severity="warn"
+                    class="shrink-0 hidden sm:inline-flex"
+                ></p-tag>
 
                 <p-tag
                     :value="({!! Js::from($linkTypeLabels) !!}[item.target_type] || item.target_type)"
@@ -131,15 +150,102 @@
                 <small class="text-surface-400">{{ __('URL, route name, or anchor (#section). Depends on the link type.') }}</small>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium text-surface-700 dark:text-surface-200">{{ __('Icon') }}</label>
-                    <p-input-text v-model="editingItem.icon" placeholder="heroicon-o-home" fluid></p-input-text>
+            <div class="flex flex-col gap-1" v-if="editingItem.depth === 0">
+                <label class="text-sm font-medium text-surface-700 dark:text-surface-200">{{ __('Dropdown type') }}</label>
+                <p-select
+                    v-model="editingItem.dropdown_type"
+                    :options="{!! Js::from($dropdownTypeOptions ?? []) !!}"
+                    option-label="label"
+                    option-value="value"
+                    fluid
+                ></p-select>
+                <small class="text-surface-400">{{ __('Choose "Mega menu" to render this item\'s children as a wide panel with columns.') }}</small>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="text-sm font-medium text-surface-700 dark:text-surface-200">{{ __('Icon') }}</label>
+                <div class="flex items-center gap-2">
+                    <span
+                        v-if="editingItem.icon && iconSvgCache[editingItem.icon]"
+                        v-html="iconSvgCache[editingItem.icon]"
+                        class="w-5 h-5 shrink-0 [&_svg]:w-full [&_svg]:h-full"
+                    ></span>
+                    <p-input-text
+                        :value="editingItem.icon || ''"
+                        readonly
+                        :placeholder="'{{ __('No icon') }}'"
+                        fluid
+                        class="flex-1 cursor-pointer"
+                        @click="iconPickerRef && iconPickerRef.toggle($event)"
+                    ></p-input-text>
+                    <p-button
+                        icon="pi pi-th-large"
+                        text rounded
+                        v-tooltip.top="'{{ __('Browse icons') }}'"
+                        @click="iconPickerRef && iconPickerRef.toggle($event)"
+                    ></p-button>
+                    <p-button
+                        v-if="editingItem.icon"
+                        icon="pi pi-times"
+                        text rounded
+                        severity="danger"
+                        v-tooltip.top="'{{ __('Remove icon') }}'"
+                        @click="iconClear()"
+                    ></p-button>
                 </div>
-                <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium text-surface-700 dark:text-surface-200">{{ __('Item CSS class') }}</label>
-                    <p-input-text v-model="editingItem.css_class" fluid></p-input-text>
-                </div>
+
+                <p-popover ref="iconPickerRef" :style="{ width: '420px' }">
+                    <div class="flex flex-col gap-3 p-1">
+                        <p-select
+                            v-if="iconSetsData.length > 1"
+                            v-model="iconActiveSet"
+                            :options="iconSetsData"
+                            option-label="label"
+                            option-value="name"
+                            fluid
+                            size="small"
+                        ></p-select>
+                        <p-input-text
+                            v-model="iconSearch"
+                            :placeholder="'{{ __('Search icons...') }}'"
+                            fluid
+                            size="small"
+                        ></p-input-text>
+                        <div ref="iconGridRef" style="display:flex;flex-wrap:wrap;gap:0.25rem;max-height:16rem;overflow-y:auto">
+                            <button
+                                v-for="iconId in iconVisibleIcons"
+                                :key="iconId"
+                                type="button"
+                                @click="iconSelect(iconId)"
+                                :title="iconId"
+                                :style="{
+                                    width: '2rem', height: '2rem',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    borderRadius: '0.375rem', border: 'none', cursor: 'pointer',
+                                    background: editingItem.icon === iconId ? 'var(--p-primary-100, #e0e7ff)' : 'transparent',
+                                    outline: editingItem.icon === iconId ? '1px solid var(--p-primary-500, #6366f1)' : 'none',
+                                }"
+                                @mouseenter="$event.currentTarget.style.background = editingItem.icon === iconId ? 'var(--p-primary-100, #e0e7ff)' : 'var(--p-surface-100, #f1f5f9)'"
+                                @mouseleave="$event.currentTarget.style.background = editingItem.icon === iconId ? 'var(--p-primary-100, #e0e7ff)' : 'transparent'"
+                            >
+                                <span
+                                    v-if="iconSvgCache[iconId]"
+                                    v-html="iconSvgCache[iconId]"
+                                    style="width:1.25rem;height:1.25rem;pointer-events:none;display:flex"
+                                ></span>
+                                <span
+                                    v-else
+                                    style="width:1.25rem;height:1.25rem;border-radius:0.25rem;background:var(--p-surface-200,#e2e8f0)"
+                                ></span>
+                            </button>
+                            <div ref="iconSentinelRef" style="width:100%;height:1px"></div>
+                            <p
+                                v-if="iconFilteredIcons.length === 0"
+                                style="width:100%;text-align:center;padding:1rem 0;font-size:0.875rem;color:var(--p-surface-400)"
+                            >{{ __('No icons found') }}</p>
+                        </div>
+                    </div>
+                </p-popover>
             </div>
 
             <div class="flex items-center gap-6 pt-1">
@@ -151,18 +257,6 @@
                     <p-toggle-switch v-model="editingItem.visible"></p-toggle-switch>
                     {{ __('Visible') }}
                 </label>
-            </div>
-
-            <div class="flex flex-col gap-1" v-if="editingItem.depth === 0">
-                <label class="text-sm font-medium text-surface-700 dark:text-surface-200">{{ __('Dropdown type') }}</label>
-                <p-select
-                    v-model="editingItem.dropdown_type"
-                    :options="{!! Js::from($dropdownTypeOptions ?? []) !!}"
-                    option-label="label"
-                    option-value="value"
-                    fluid
-                ></p-select>
-                <small class="text-surface-400">{{ __('Choose "Mega menu" to render this item\'s children as a wide panel with columns.') }}</small>
             </div>
         </div>
 
@@ -368,5 +462,122 @@ if (!window.__menuTreeWatcher) {
 }
 document.addEventListener('livue:navigated', ensureMenuTreeSortable);
 
-return {};
+// ── Icon picker ──────────────────────────────────────────────────────────────
+const ICON_PAGE = 60
+const iconSetsData = {!! Js::from($iconSets ?? []) !!}
+const iconPickerRef = ref(null)
+const iconGridRef = ref(null)
+const iconSentinelRef = ref(null)
+const iconSearch = ref('')
+const iconActiveSet = ref(iconSetsData[0]?.name ?? null)
+const iconSvgCache = ref({})
+const iconVisibleCount = ref(ICON_PAGE)
+
+// All matching IDs (no cap)
+const iconFilteredIcons = computed(() => {
+    const set = iconSetsData.find(s => s.name === iconActiveSet.value)
+    if (!set) return []
+    const q = iconSearch.value.trim().toLowerCase()
+    const ids = []
+    const variants = set.variants || []
+    if (variants.length > 0) {
+        const variant = variants[0]
+        for (const name of (set.icons || [])) {
+            if (!q || name.includes(q)) ids.push(set.name + '/' + variant.prefix + name)
+        }
+    } else {
+        for (const name of (set.icons || [])) {
+            if (!q || name.includes(q)) ids.push(set.name + '/' + name)
+        }
+    }
+    return ids
+})
+
+// Slice shown to user — grows as they scroll
+const iconVisibleIcons = computed(() =>
+    iconFilteredIcons.value.slice(0, iconVisibleCount.value)
+)
+
+// Reset page when filter changes
+watch([iconFilteredIcons], () => { iconVisibleCount.value = ICON_PAGE })
+
+const iconFetchBatch = async (ids) => {
+    const missing = ids.filter(id => !iconSvgCache.value[id])
+    if (!missing.length) return
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? ''
+    try {
+        const res = await fetch('/tagixo/icons/batch', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+            body: JSON.stringify({ ids: missing }),
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        iconSvgCache.value = { ...iconSvgCache.value, ...data }
+    } catch {}
+}
+
+// Fetch SVGs whenever visible slice changes
+watch(iconVisibleIcons, (ids) => { iconFetchBatch(ids) }, { immediate: true })
+
+// Fetch SVG for currently selected icon
+watch(() => editingItem.value?.icon, (id) => {
+    if (id && !iconSvgCache.value[id]) iconFetchBatch([id])
+}, { immediate: true })
+
+// IntersectionObserver on sentinel: load next page when bottom is reached
+let iconObserver = null
+const iconSetupObserver = () => {
+    if (iconObserver) iconObserver.disconnect()
+    const grid = iconGridRef.value?.$el ?? iconGridRef.value
+    if (!grid) return
+    iconObserver = new IntersectionObserver((entries) => {
+        if (entries[0]?.isIntersecting && iconVisibleCount.value < iconFilteredIcons.value.length) {
+            iconVisibleCount.value += ICON_PAGE
+        }
+    }, { root: grid, threshold: 0.1 })
+    const sentinel = iconSentinelRef.value?.$el ?? iconSentinelRef.value
+    if (sentinel) iconObserver.observe(sentinel)
+}
+watch([iconGridRef, iconSentinelRef], iconSetupObserver)
+
+const iconSelect = (iconId) => {
+    editingItem.value.icon = iconId
+    iconPickerRef.value?.hide()
+}
+
+const iconClear = () => { editingItem.value.icon = null }
+
+// ── Collapse/expand ───────────────────────────────────────────────────────────
+const collapsedKeys = ref(new Set())
+
+const itemKey = (item, i) => String(item._key || i)
+
+const hasChildren = (arr, i) => {
+    const depth = arr[i]?.depth ?? 0
+    return (arr[i + 1]?.depth ?? -1) > depth
+}
+
+const toggleCollapse = (arr, item, i) => {
+    const k = itemKey(item, i)
+    const s = new Set(collapsedKeys.value)
+    if (s.has(k)) s.delete(k); else s.add(k)
+    collapsedKeys.value = s
+}
+
+const isHidden = (arr, i) => {
+    const iDepth = arr[i]?.depth ?? 0
+    for (let j = i - 1; j >= 0; j--) {
+        const jDepth = arr[j]?.depth ?? 0
+        if (jDepth < iDepth) {
+            if (collapsedKeys.value.has(itemKey(arr[j], j))) return true
+        } else {
+            break
+        }
+    }
+    return false
+}
+
+return { iconPickerRef, iconGridRef, iconSentinelRef, iconSearch, iconActiveSet, iconSvgCache, iconFilteredIcons, iconVisibleIcons, iconSelect, iconClear, iconSetsData, collapsedKeys, hasChildren, toggleCollapse, isHidden, itemKey };
 @endscript

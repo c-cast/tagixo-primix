@@ -33,6 +33,7 @@ class MenuTreeField extends ViewField
             'pageOptions' => static::pageOptions(),
             'blankItem' => MenuTreeStructure::blankItem(),
             'dropdownTypeOptions' => static::dropdownTypeOptions(),
+            'iconSets' => app(\Ccast\Tagixo\Core\IconManager::class)->getIconSetsForVue(),
         ]);
     }
 
