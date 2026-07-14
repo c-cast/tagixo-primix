@@ -3,10 +3,12 @@
 namespace Ccast\TagixoPrimix\Resources\Forms;
 
 use Ccast\Tagixo\Models\FormSchema;
+use Ccast\Tagixo\Tagixo;
 use Ccast\TagixoPrimix\Resources\Forms\Pages\EditForm;
 use Ccast\TagixoPrimix\Resources\Forms\Pages\ListForms;
 use Ccast\TagixoPrimix\Resources\Forms\Schemas\FormForm;
 use Ccast\TagixoPrimix\Resources\Forms\Tables\FormsTable;
+use Illuminate\Database\Eloquent\Builder;
 use Primix\Forms\Form;
 use Primix\Resources\Resource;
 use Primix\Tables\Table;
@@ -26,6 +28,18 @@ class FormResource extends Resource
     public static function canAccess(): bool
     {
         return true;
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $locked = app(Tagixo::class)->getLockedFormTarget();
+
+        if ($locked !== null) {
+            $query->where('form_target', $locked);
+        }
+
+        return $query;
     }
 
     public static function getModelLabel(): string
