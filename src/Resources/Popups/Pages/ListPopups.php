@@ -17,7 +17,7 @@ class ListPopups extends ListRecords
                 ->label(__('Create new popup'))
                 ->icon('heroicon-o-plus')
                 ->color('primary')
-                ->url(fn (): string => route('builder.popups.new')
+                ->url(fn (): string => route('tagixo.popups.new')
                     .'?back='.urlencode(PopupResource::getUrl('index'))),
         ];
     }

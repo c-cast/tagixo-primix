@@ -14,7 +14,7 @@ class EditGlobalBlock extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            VisualBuilderAction::make(fn () => route('builder.global-blocks.edit', $this->record->id)
+            VisualBuilderAction::make(fn () => route('tagixo.global-blocks.edit', $this->record->id)
                 .'?back='.urlencode(GlobalBlockResource::getUrl('edit', ['record' => $this->record]))),
 
             DeleteAction::make(),

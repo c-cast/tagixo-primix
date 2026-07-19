@@ -14,7 +14,7 @@ class EditForm extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            VisualBuilderAction::make(fn () => route('builder.forms.edit', $this->record->id)
+            VisualBuilderAction::make(fn () => route('tagixo.forms.edit', $this->record->id)
                 . '?back=' . urlencode(FormResource::getUrl('edit', ['record' => $this->record]))),
 
             DeleteAction::make(),

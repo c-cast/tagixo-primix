@@ -84,7 +84,7 @@ class FormsTable
             ->columns($columns)
             ->filters($filters)
             ->actions([
-                VisualBuilderAction::make(fn (FormSchema $record): string => route('builder.forms.edit', $record->id)
+                VisualBuilderAction::make(fn (FormSchema $record): string => route('tagixo.forms.edit', $record->id)
                     . '?back=' . urlencode(FormResource::getUrl('index'))),
 
                 EditAction::make(),

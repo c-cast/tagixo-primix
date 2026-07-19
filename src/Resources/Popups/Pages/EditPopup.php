@@ -14,7 +14,7 @@ class EditPopup extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            VisualBuilderAction::make(fn () => route('builder.popups.edit', $this->record->id)
+            VisualBuilderAction::make(fn () => route('tagixo.popups.edit', $this->record->id)
                 .'?back='.urlencode(PopupResource::getUrl('edit', ['record' => $this->record]))),
 
             DeleteAction::make(),

@@ -39,10 +39,14 @@ class TagixoFormToPrimix
     private array $childrenByParent = [];
 
     /**
-     * @param  array<int, array<string,mixed>>  $components  flat Tagixo components
+     * @param  array<int, array<string,mixed>>  $components   flat Tagixo components
+     * @param  int|null                          $rootColumns  columns of the root grid
+     *                                                         (from body.grid.columns); when provided and > 0,
+     *                                                         root-level fields are wrapped in a grid so column
+     *                                                         spans work correctly in merge mode.
      * @return array<int, array<string,mixed>>  Primix fromSchema definitions
      */
-    public function toDefinitions(array $components): array
+    public function toDefinitions(array $components, ?int $rootColumns = null): array
     {
         $this->childrenByParent = [];
         foreach ($components as $component) {
@@ -58,7 +62,13 @@ class TagixoFormToPrimix
         }
         unset($siblings);
 
-        return $this->buildLevel('__root__');
+        $defs = $this->buildLevel('__root__');
+
+        if ($rootColumns !== null && $rootColumns > 0 && $defs !== []) {
+            $defs = [['type' => 'grid', 'columns' => $rootColumns, 'schema' => $defs]];
+        }
+
+        return $defs;
     }
 
     /** @return array<int, array<string,mixed>> */
@@ -124,7 +134,7 @@ class TagixoFormToPrimix
         }
 
         $def = ['type' => $primixType];
-        $label = trim((string) ($props['label'] ?? ''));
+        $label = trim(strip_tags((string) ($props['label'] ?? '')));
 
         // Tabs: children are tab nodes → { label, name, schema }.
         if ($type === 'tabs-layout') {
@@ -162,10 +172,12 @@ class TagixoFormToPrimix
         }
 
         // Leaf field.
-        $def['name'] = $this->fieldName($props, $id);
+        $fieldName = $this->fieldName($props, $id);
+        $def['name'] = $fieldName;
         if ($label !== '') {
             $def['label'] = $label;
         }
+        $def['extraWrapperAttributes'] = ['data-tgx-field' => $fieldName];
         $placeholder = trim((string) ($props['placeholder'] ?? ''));
         if ($placeholder !== '') {
             $def['placeholder'] = $placeholder;
@@ -219,7 +231,7 @@ class TagixoFormToPrimix
     private function branch(array $node, string $namePrefix): array
     {
         $props = $this->props($node);
-        $label = trim((string) ($props['label'] ?? ''));
+        $label = trim(strip_tags((string) ($props['label'] ?? '')));
         $id = (string) ($node['id'] ?? '');
 
         return [

@@ -15,6 +15,9 @@ use Ccast\TagixoPrimix\Resources\Popups\PopupResource;
 use Ccast\TagixoPrimix\Resources\Sliders\SliderResource;
 use Ccast\Tagixo\Contracts\HasPlugin;
 use Ccast\Tagixo\Tagixo;
+use Ccast\TagixoPrimix\Forms\PropTypes\BooleanTablePropType;
+use Ccast\TagixoPrimix\Forms\PropTypes\DateTablePropType;
+use Ccast\TagixoPrimix\Forms\PropTypes\FileTablePropType;
 use Ccast\TagixoPrimix\Forms\PropTypes\PrimixTablePropType;
 use Primix\Contracts\Plugin;
 use Primix\Panel;
@@ -85,7 +88,10 @@ class TagixoPrimixPlugin implements Plugin
             app(Tagixo::class)->lockFormTarget($this->formTarget);
         }
 
-        app(Tagixo::class)->extendFormModule('*', ['table' => PrimixTablePropType::class]);
+        app(Tagixo::class)->extendFormModule('*',                           ['table' => PrimixTablePropType::class]);
+        app(Tagixo::class)->extendFormModule(['checkbox'],                  ['table' => BooleanTablePropType::class]);
+        app(Tagixo::class)->extendFormModule(['date', 'date-picker'],       ['table' => DateTablePropType::class]);
+        app(Tagixo::class)->extendFormModule(['file', 'file-upload'],       ['table' => FileTablePropType::class]);
         app(Tagixo::class)->hideFormModulePropTypes('*', ['sizing']);
 
         foreach (app(Tagixo::class)->getPlugins() as $plugin) {

@@ -56,7 +56,7 @@ class SlidersTable
                     ]),
             ])
             ->actions([
-                VisualBuilderAction::make(fn (Slider $record): string => route('builder.sliders.edit', $record->id)
+                VisualBuilderAction::make(fn (Slider $record): string => route('tagixo.sliders.edit', $record->id)
                     . '?back=' . urlencode(SliderResource::getUrl('index'))),
 
                 EditAction::make(),

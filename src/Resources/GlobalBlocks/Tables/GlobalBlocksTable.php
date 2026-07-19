@@ -61,7 +61,7 @@ class GlobalBlocksTable
                     ]),
             ])
             ->actions([
-                VisualBuilderAction::make(fn (GlobalBlock $record): string => route('builder.global-blocks.edit', $record->id)
+                VisualBuilderAction::make(fn (GlobalBlock $record): string => route('tagixo.global-blocks.edit', $record->id)
                     .'?back='.urlencode(GlobalBlockResource::getUrl('index'))),
 
                 EditAction::make(),

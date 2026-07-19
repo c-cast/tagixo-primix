@@ -17,7 +17,7 @@ class ListGlobalBlocks extends ListRecords
                 ->label(__('Create new global block'))
                 ->icon('heroicon-o-plus')
                 ->color('primary')
-                ->url(fn (): string => route('builder.global-blocks.new')
+                ->url(fn (): string => route('tagixo.global-blocks.new')
                     .'?back='.urlencode(GlobalBlockResource::getUrl('index'))),
         ];
     }

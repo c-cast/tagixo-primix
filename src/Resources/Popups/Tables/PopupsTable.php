@@ -56,7 +56,7 @@ class PopupsTable
                     ]),
             ])
             ->actions([
-                VisualBuilderAction::make(fn (Popup $record): string => route('builder.popups.edit', $record->id)
+                VisualBuilderAction::make(fn (Popup $record): string => route('tagixo.popups.edit', $record->id)
                     .'?back='.urlencode(PopupResource::getUrl('index'))),
 
                 EditAction::make(),

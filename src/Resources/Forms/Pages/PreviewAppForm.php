@@ -41,7 +41,10 @@ class PreviewAppForm extends Page
             ? $content['components']
             : (is_array($this->record->fields ?? null) ? $this->record->fields : []);
 
-        $this->previewDefinitions = app(TagixoFormToPrimix::class)->toDefinitions($components);
+        $body = is_array($content['body'] ?? null) ? $content['body'] : [];
+        $rootColumns = (int) ($body['grid']['columns']['value'] ?? $body['grid']['columns'] ?? 12);
+
+        $this->previewDefinitions = app(TagixoFormToPrimix::class)->toDefinitions($components, $rootColumns);
     }
 
     /**
