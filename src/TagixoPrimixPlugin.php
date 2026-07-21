@@ -10,7 +10,7 @@ use Ccast\TagixoPrimix\Resources\Mails\MailResource;
 use Ccast\TagixoPrimix\Resources\MediaResource;
 use Ccast\TagixoPrimix\Resources\MenuResource;
 use Ccast\TagixoPrimix\Resources\Pages\PageResource;
-use Ccast\TagixoPrimix\Resources\Pdfs\PdfResource;
+use Ccast\TagixoPrimix\Resources\Documents\DocumentResource;
 use Ccast\TagixoPrimix\Resources\Popups\PopupResource;
 use Ccast\TagixoPrimix\Resources\Sliders\SliderResource;
 use Ccast\Tagixo\Contracts\HasPlugin;
@@ -28,7 +28,7 @@ class TagixoPrimixPlugin implements Plugin
 
     private bool $mailTemplates = false;
 
-    private bool $pdfTemplates = false;
+    private bool $documents = false;
 
     private ?string $formTarget = null;
 
@@ -53,7 +53,7 @@ class TagixoPrimixPlugin implements Plugin
         foreach ([
             [$this->mediaGallery, MediaResource::class],
             [$this->mailTemplates, MailResource::class],
-            [$this->pdfTemplates, PdfResource::class],
+            [$this->documents, DocumentResource::class],
         ] as [$enabled, $resource]) {
             if ($enabled && ! in_array($resource, $resources, true)) {
                 $resources[] = $resource;
@@ -138,10 +138,16 @@ class TagixoPrimixPlugin implements Plugin
         return $this;
     }
 
-    public function withPdfTemplates(bool $enabled = true): static
+    public function withDocuments(bool $enabled = true): static
     {
-        $this->pdfTemplates = $enabled;
+        $this->documents = $enabled;
 
         return $this;
+    }
+
+    /** @deprecated Use withDocuments() instead. */
+    public function withPdfTemplates(bool $enabled = true): static
+    {
+        return $this->withDocuments($enabled);
     }
 }

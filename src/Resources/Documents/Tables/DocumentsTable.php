@@ -1,11 +1,11 @@
 <?php
 
-namespace Ccast\TagixoPrimix\Resources\Pdfs\Tables;
+namespace Ccast\TagixoPrimix\Resources\Documents\Tables;
 
 use Ccast\Tagixo\Enums\PageStatus;
-use Ccast\Tagixo\Models\PdfTemplate;
+use Ccast\Tagixo\Models\DocumentTemplate;
 use Ccast\TagixoPrimix\Actions\VisualBuilderAction;
-use Ccast\TagixoPrimix\Resources\Pdfs\PdfResource;
+use Ccast\TagixoPrimix\Resources\Documents\DocumentResource;
 use Primix\Actions\Action;
 use Primix\Resources\Actions\DeleteAction;
 use Primix\Resources\Actions\DeleteBulkAction;
@@ -15,7 +15,7 @@ use Primix\Tables\Columns\TextColumn;
 use Primix\Tables\Filters\SelectFilter;
 use Primix\Tables\Table;
 
-class PdfsTable
+class DocumentsTable
 {
     public static function configure(Table $table): Table
     {
@@ -94,20 +94,20 @@ class PdfsTable
             ->actions([
                 EditAction::make(),
 
-                VisualBuilderAction::make(fn (PdfTemplate $record) => PdfResource::getUrl('build', ['record' => $record])),
+                VisualBuilderAction::make(fn (DocumentTemplate $record) => DocumentResource::getUrl('build', ['record' => $record])),
 
                 Action::make('download')
-                    ->label(__('Download PDF'))
+                    ->label(__('Download'))
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('gray')
-                    ->url(fn (PdfTemplate $record) => url('/admin/pdfs/' . $record->getKey() . '/download')),
+                    ->url(fn (DocumentTemplate $record) => url('/admin/documents/' . $record->getKey() . '/download')),
 
                 Action::make('duplicate')
                     ->label(__('Duplicate'))
                     ->icon('heroicon-o-document-duplicate')
                     ->color('gray')
                     ->requiresConfirmation()
-                    ->action(function (PdfTemplate $record) {
+                    ->action(function (DocumentTemplate $record) {
                         $duplicate               = $record->replicate();
                         $duplicate->name         = $record->name . ' ' . __('(Copy)');
                         $duplicate->slug         = $record->slug . '-copy-' . time();
@@ -121,8 +121,8 @@ class PdfsTable
             ->bulkActions([
                 DeleteBulkAction::make(),
             ])
-            ->emptyStateHeading(__('No PDF templates yet'))
-            ->emptyStateDescription(__('Create your first PDF template to start generating documents.'))
+            ->emptyStateHeading(__('No documents yet'))
+            ->emptyStateDescription(__('Create your first document to get started.'))
             ->emptyStateIcon('heroicon-o-document');
     }
 }

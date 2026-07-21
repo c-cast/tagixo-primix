@@ -1,19 +1,19 @@
 <?php
 
-namespace Ccast\TagixoPrimix\Resources\Pdfs\Pages;
+namespace Ccast\TagixoPrimix\Resources\Documents\Pages;
 
 use Ccast\Tagixo\Enums\PageStatus;
-use Ccast\Tagixo\Models\PdfTemplate;
-use Ccast\TagixoPrimix\Resources\Pdfs\PdfResource;
+use Ccast\Tagixo\Models\DocumentTemplate;
+use Ccast\TagixoPrimix\Resources\Documents\DocumentResource;
 use Illuminate\Validation\Rule;
 use Primix\Actions\Action;
 use Primix\Notifications\Notification;
 use Primix\Resources\Actions\DeleteAction;
 use Primix\Resources\Pages\EditRecord;
 
-class EditPdf extends EditRecord
+class EditDocument extends EditRecord
 {
-    protected static ?string $resource = PdfResource::class;
+    protected static ?string $resource = DocumentResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -22,13 +22,13 @@ class EditPdf extends EditRecord
                 ->label(__('Visual Builder'))
                 ->icon('heroicon-o-paint-brush')
                 ->color('primary')
-                ->url(fn () => PdfResource::getUrl('build', ['record' => $this->record])),
+                ->url(fn () => DocumentResource::getUrl('build', ['record' => $this->record])),
 
-            Action::make('downloadPdf')
-                ->label(__('Download PDF'))
+            Action::make('downloadDocument')
+                ->label(__('Download'))
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('gray')
-                ->url(fn () => url('/admin/pdfs/' . $this->record->getKey() . '/download')),
+                ->url(fn () => url('/admin/documents/' . $this->record->getKey() . '/download')),
 
             Action::make('publish')
                 ->label(__('Publish'))
@@ -63,7 +63,7 @@ class EditPdf extends EditRecord
 
         $rules['data.slug'] = array_filter([
             ...$slugRules,
-            Rule::unique((new PdfTemplate())->getTable(), 'slug')->ignore($this->record),
+            Rule::unique((new DocumentTemplate())->getTable(), 'slug')->ignore($this->record),
         ]);
 
         $this->validate($rules);

@@ -1,19 +1,19 @@
 <?php
 
-namespace Ccast\TagixoPrimix\Resources\Pdfs\Pages;
+namespace Ccast\TagixoPrimix\Resources\Documents\Pages;
 
 use Ccast\Tagixo\Renderers\PageRenderer;
-use Ccast\Tagixo\Renderers\PdfRenderer;
+use Ccast\Tagixo\Renderers\DocumentRenderer;
 use Ccast\TagixoPrimix\Pages\PrimixVisualBuilderPage;
-use Ccast\TagixoPrimix\Resources\Pdfs\PdfResource;
+use Ccast\TagixoPrimix\Resources\Documents\DocumentResource;
 
-class BuildPdf extends PrimixVisualBuilderPage
+class BuildDocument extends PrimixVisualBuilderPage
 {
-    protected static ?string $resource = PdfResource::class;
+    protected static ?string $resource = DocumentResource::class;
 
     public function getContext(): string
     {
-        return 'pdf';
+        return 'document';
     }
 
     protected function authorizeAccess(): void
@@ -60,7 +60,7 @@ class BuildPdf extends PrimixVisualBuilderPage
             ? ['components' => $footerComponents, 'body' => []]
             : (is_array($this->record->footer_content) ? $this->record->footer_content : []);
 
-        $renderer = app(PdfRenderer::class);
+        $renderer = app(DocumentRenderer::class);
         $html     = $renderer->renderFromJson(
             $bodyContent,
             $extraCss,
@@ -139,13 +139,13 @@ class BuildPdf extends PrimixVisualBuilderPage
         $footerContentArr = is_string($record->footer_content) ? json_decode($record->footer_content, true) : $record->footer_content;
 
         if (! empty($headerContentArr['components'])) {
-            $r             = $pageRenderer->setContext('pdf')->renderFromJson($headerContentArr);
+            $r             = $pageRenderer->setContext('document')->renderFromJson($headerContentArr);
             $css           = trim($r['css'] ?? '');
             $headerPreview = ($css ? "<style>{$css}</style>" : '') . ($r['html'] ?? '');
         }
 
         if (! empty($footerContentArr['components'])) {
-            $r             = $pageRenderer->setContext('pdf')->renderFromJson($footerContentArr);
+            $r             = $pageRenderer->setContext('document')->renderFromJson($footerContentArr);
             $css           = trim($r['css'] ?? '');
             $footerPreview = ($css ? "<style>{$css}</style>" : '') . ($r['html'] ?? '');
         }

@@ -1,17 +1,17 @@
 <?php
 
-namespace Ccast\TagixoPrimix\Resources\Pdfs\Pages;
+namespace Ccast\TagixoPrimix\Resources\Documents\Pages;
 
-use Ccast\Tagixo\Models\PdfTemplate;
-use Ccast\TagixoPrimix\Resources\Pdfs\PdfResource;
+use Ccast\Tagixo\Models\DocumentTemplate;
+use Ccast\TagixoPrimix\Resources\Documents\DocumentResource;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
 use Primix\Notifications\Notification;
 use Primix\Resources\Pages\CreateRecord;
 
-class CreatePdf extends CreateRecord
+class CreateDocument extends CreateRecord
 {
-    protected static ?string $resource = PdfResource::class;
+    protected static ?string $resource = DocumentResource::class;
 
     protected function getRedirectUrl(Model $record): string
     {
@@ -26,7 +26,7 @@ class CreatePdf extends CreateRecord
 
         $rules['data.slug'] = array_filter([
             ...$slugRules,
-            Rule::unique((new PdfTemplate())->getTable(), 'slug'),
+            Rule::unique((new DocumentTemplate())->getTable(), 'slug'),
         ]);
 
         $this->validate($rules);

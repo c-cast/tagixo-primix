@@ -1,6 +1,6 @@
 <?php
 
-namespace Ccast\TagixoPrimix\Resources\Pdfs\Schemas;
+namespace Ccast\TagixoPrimix\Resources\Documents\Schemas;
 
 use Ccast\TagixoPrimix\Support\SlugInput;
 use Primix\Forms\Components\Fields\DatePicker;
@@ -8,7 +8,7 @@ use Primix\Forms\Components\Fields\Select;
 use Primix\Forms\Components\Fields\TextInput;
 use Primix\Forms\Form;
 
-class PdfForm
+class DocumentForm
 {
     public static function configure(Form $form): Form
     {
