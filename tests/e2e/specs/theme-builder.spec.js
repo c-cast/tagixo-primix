@@ -1,5 +1,5 @@
 import { expect, test } from '../helpers/fixtures.js'
-import { switchOf, typeInto } from '../helpers/panel.js'
+import { typeInto } from '../helpers/panel.js'
 
 /**
  * The Theme Builder: a template dressed zone by zone. The header belongs to the
@@ -56,7 +56,7 @@ test('a new template is created already claiming something', async ({ page }) =>
     await typeInto(page.getByLabel('Name'), 'Homepage template')
     // The questions are asked here too: a template with no conditions dresses
     // nothing, so there is nothing to come back for.
-    await switchOf(page, 'The homepage').click()
+    await page.getByLabel('The homepage').click()
 
     await page.getByRole('button', { name: /^Create/ }).click()
 

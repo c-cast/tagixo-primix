@@ -16,7 +16,7 @@
     ],
     "require": {
         "php": "^8.2",
-        "primix/primix": "^0.7.17",
+        "primix/primix": "^0.7.18",
         "tagixo/core": "^0.1"
     },
     "require-dev": {
