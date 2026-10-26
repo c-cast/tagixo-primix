@@ -3,6 +3,7 @@
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Orchestra\Testbench\Factories\UserFactory;
@@ -11,8 +12,12 @@ use Primix\Tables\Table;
 use Tagixo\Core\Facades\Tagixo;
 use Tagixo\PageBuilder\Facades\PageBuilder;
 use Tagixo\PageBuilder\Models\Layout;
+use Tagixo\PageBuilder\Models\Page;
+use Tagixo\PageBuilder\Services\ErrorPageSnapshot;
+use Tagixo\PageBuilder\Support\ErrorPages;
 use Tagixo\Primix\Pages\ThemeBuilder;
 use Tagixo\Primix\Resources\LayoutResource;
+use Tagixo\Primix\Resources\PageResource;
 
 /*
  * The Theme Builder: every template with its three zones. A header and a footer
@@ -133,6 +138,88 @@ it('renders the screen with the templates and their zones', function () {
         ->assertSee('Header')
         ->assertSee('Body')
         ->assertSee('Footer');
+});
+
+describe('error pages', function () {
+    beforeEach(function () {
+        $this->snapshotDir = sys_get_temp_dir().'/tgx-theme-errors-'.uniqid();
+        config()->set('tagixo-page-builder.error_pages.snapshot_path', $this->snapshotDir);
+    });
+
+    afterEach(function () {
+        File::deleteDirectory($this->snapshotDir);
+    });
+
+    it('lists one error page per HTTP status, none built yet', function () {
+        $pages = collect(app(ThemeBuilder::class)->errorPages())->keyBy('status');
+
+        expect($pages->keys()->all())->toBe(ErrorPages::statuses())
+            ->and($pages[404]['label'])->toBe('Page not found (404)')
+            ->and($pages[404]['configured'])->toBeFalse()
+            ->and($pages[404]['exported'])->toBeFalse()
+            ->and($pages[404]['url'])->toBe(route('tagixo-primix.error-pages.edit', ['status' => 404]));
+
+        // Listing never creates anything.
+        expect(Page::where('template_type', 'error')->count())->toBe(0);
+    });
+
+    it('creates the page on the way to the editor, which opens it', function () {
+        $url = route('tagixo-primix.error-pages.edit', ['status' => 503]);
+
+        $this->get($url)->assertRedirect();
+
+        $page = ErrorPages::find(503);
+
+        expect($page)->not->toBeNull()
+            ->and($this->get($url)->headers->get('location'))
+            ->toContain('type=pages')
+            ->toContain('id='.$page->getKey())
+            // Following it twice is the same page.
+            ->and(Page::where('template_type', 'error')->count())->toBe(1);
+    });
+
+    it('opens an error page in the error context', function () {
+        $page = PageBuilder::ensureErrorPage(404);
+        $mount = PageResource::builderType()->editor($page);
+
+        expect($mount->context)->toBe('error');
+    });
+
+    it('does not invent a page for a status it does not answer', function () {
+        $this->get('/tagixo/primix/error-pages/418')->assertNotFound();
+
+        expect(Page::where('template_type', 'error')->count())->toBe(0);
+    });
+
+    it('says a page is built once it holds something, and that its file is ready', function () {
+        app(ErrorPageSnapshot::class)->setEnabled(true);
+        $page = ErrorPages::ensure(404);
+        $page->update(['rendered_html' => '<section>Nothing here</section>']);
+
+        $row = collect(app(ThemeBuilder::class)->errorPages())->keyBy('status')[404];
+
+        expect($row['configured'])->toBeTrue()
+            ->and($row['exported'])->toBeTrue()
+            ->and(app(ThemeBuilder::class)->staticErrorPages())->toBeTrue();
+    });
+
+    it('shows them on the screen, and what the mode is', function () {
+        $this->get(ThemeBuilder::getUrl())
+            ->assertOk()
+            ->assertSee('Error pages')
+            ->assertSee('Page not found (404)')
+            ->assertSee('Maintenance (503)')
+            ->assertSee('Rendered live');
+    });
+
+    it('keeps them out of the pages listing', function () {
+        ErrorPages::ensure(404);
+        $home = PageResource::createRecord(['title' => 'Home']);
+
+        $ids = PageResource::builderType()->indexQuery(request())->pluck('id')->all();
+
+        expect($ids)->toBe([$home->getKey()]);
+    });
 });
 
 it('opens one editor per document of a layout, and keeps the rest of the actions', function () {

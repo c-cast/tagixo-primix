@@ -1,12 +1,15 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Orchestra\Testbench\Factories\UserFactory;
 use Primix\Forms\Form;
 use Primix\Tables\Table;
 use Tagixo\PageBuilder\Models\Layout;
 use Tagixo\PageBuilder\Models\SiteSettings as Settings;
+use Tagixo\PageBuilder\Services\ErrorPageSnapshot;
+use Tagixo\PageBuilder\Support\ErrorPages;
 use Tagixo\Primix\Pages\SiteSettings;
 use Tagixo\Primix\Resources\LayoutResource;
 use Tagixo\Primix\Resources\PageResource;
@@ -166,6 +169,15 @@ it('carries the settings of the site, and only the keys it declares', function (
     expect(array_keys(Settings::settings()))->toBe(Settings::KEYS);
 });
 
+it('carries a Save action, because nothing else on the screen sends the form', function () {
+    $page = app(SiteSettings::class);
+    $page->mount();
+
+    expect(array_keys($page->getVisibleFooterActions()))->toBe(['save']);
+
+    $this->get(SiteSettings::getUrl())->assertOk()->assertSee('Save');
+});
+
 it('stores what the form sent, clearing what was emptied and ignoring the rest', function () {
     Settings::set('default_title', 'Old title');
 
@@ -183,6 +195,67 @@ it('stores what the form sent, clearing what was emptied and ignoring the rest',
         ->and($settings['default_title'])->toBeNull()
         ->and($settings['custom_css'])->toBe('body { color: #111; }')
         ->and($settings)->not->toHaveKey('tracking_id');
+});
+
+describe('static error pages', function () {
+    beforeEach(function () {
+        $this->snapshotDir = sys_get_temp_dir().'/tgx-primix-errors-'.uniqid();
+        config()->set('tagixo-page-builder.error_pages.snapshot_path', $this->snapshotDir);
+    });
+
+    afterEach(function () {
+        File::deleteDirectory($this->snapshotDir);
+    });
+
+    it('offers the mode on the settings screen, off until someone turns it on', function () {
+        $this->get(SiteSettings::getUrl())
+            ->assertOk()
+            ->assertSee('Static error pages');
+
+        expect(app(ErrorPageSnapshot::class)->isEnabled())->toBeFalse();
+    });
+
+    it('turns the mode on through the snapshot service, exporting the pages that exist', function () {
+        ErrorPages::ensure(404);
+
+        SiteSettings::store(['static_error_pages' => true]);
+
+        $snapshot = app(ErrorPageSnapshot::class);
+
+        expect($snapshot->isEnabled())->toBeTrue()
+            // The marker file is what the error handler reads while the database is down.
+            ->and(is_file($snapshot->directory().'/.enabled'))->toBeTrue()
+            ->and($snapshot->has(404))->toBeTrue();
+    });
+
+    it('turns it off again and removes the snapshots', function () {
+        ErrorPages::ensure(404);
+        SiteSettings::store(['static_error_pages' => true]);
+
+        SiteSettings::store(['static_error_pages' => false]);
+
+        $snapshot = app(ErrorPageSnapshot::class);
+
+        expect($snapshot->isEnabled())->toBeFalse()
+            ->and($snapshot->has(404))->toBeFalse();
+    });
+
+    it('leaves the mode alone when the form did not send it', function () {
+        SiteSettings::store(['static_error_pages' => true]);
+
+        SiteSettings::store(['site_name' => 'Tagixo']);
+
+        expect(app(ErrorPageSnapshot::class)->isEnabled())->toBeTrue();
+    });
+
+    it('shows the mode as it is, on the screen', function () {
+        SiteSettings::store(['static_error_pages' => true]);
+
+        $component = app(SiteSettings::class);
+        $component->mount();
+
+        expect($component->data['static_error_pages'])->toBeTrue();
+    });
 });
 
 it('creates a template that already claims something', function () {

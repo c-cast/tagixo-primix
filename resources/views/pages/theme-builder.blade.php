@@ -44,5 +44,38 @@
         @empty
             <p class="tgx-theme-empty">{{ __('No template yet. A page without one wears nothing.') }}</p>
         @endforelse
+
+        {{-- Error pages: one per HTTP status, built in a palette of static-safe
+             modules. With static mode on each is a plain file, so it still answers
+             when the database does not. --}}
+        <section class="tgx-theme-template">
+            <header class="tgx-theme-template-head">
+                <div>
+                    <h2 class="tgx-theme-template-name">{{ __('Error pages') }}</h2>
+                    <p class="tgx-theme-template-conditions">
+                        {{ $this->staticErrorPages()
+                            ? __('Served from static files, without the database.')
+                            : __('Rendered live. Turn on “Static error pages” in the site settings to serve them without the database.') }}
+                    </p>
+                </div>
+            </header>
+
+            <div class="tgx-theme-zones">
+                @foreach ($this->errorPages() as $errorPage)
+                    <article class="tgx-theme-zone {{ $errorPage['configured'] ? 'is-configured' : '' }}">
+                        <h3 class="tgx-theme-zone-label">{{ $errorPage['label'] }}</h3>
+                        <p class="tgx-theme-zone-state">
+                            {{ $errorPage['configured'] ? __('Built') : __('Empty') }}
+                        </p>
+                        @if ($errorPage['exported'])
+                            <p class="tgx-theme-zone-description">{{ __('Static file ready.') }}</p>
+                        @endif
+                        <a class="tgx-theme-zone-action" href="{{ $errorPage['url'] }}">
+                            {{ $errorPage['configured'] ? __('Edit') : __('Build') }}
+                        </a>
+                    </article>
+                @endforeach
+            </div>
+        </section>
     </div>
 </x-primix::pages.page>

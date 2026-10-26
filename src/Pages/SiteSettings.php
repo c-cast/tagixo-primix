@@ -2,13 +2,16 @@
 
 namespace Tagixo\Primix\Pages;
 
+use Primix\Actions\Action;
 use Primix\Forms\Components\Fields\Textarea;
 use Primix\Forms\Components\Fields\TextInput;
+use Primix\Forms\Components\Fields\Toggle;
 use Primix\Forms\Form;
 use Primix\Forms\HasForms;
 use Primix\Notifications\Notification;
 use Primix\Pages\Page;
 use Tagixo\PageBuilder\Models\SiteSettings as Settings;
+use Tagixo\PageBuilder\Services\ErrorPageSnapshot;
 
 /**
  * The few settings the public site reads: its name, the fallbacks for title and
@@ -48,6 +51,8 @@ class SiteSettings extends Page
     {
         $this->title = __('Site settings');
         $this->data = Settings::settings();
+        // The mode is read where the error handler reads it, not from the raw row.
+        $this->data[ErrorPageSnapshot::SETTING_KEY] = app(ErrorPageSnapshot::class)->isEnabled();
 
         $this->form($this->getForm());
     }
@@ -64,9 +69,27 @@ class SiteSettings extends Page
                 TextInput::make('favicon_url')->label(__('Favicon URL'))->maxLength(2048),
                 Textarea::make('custom_css')->label(__('Custom CSS'))
                     ->helperText(__('Added to every page of the site.')),
+                Toggle::make(ErrorPageSnapshot::SETTING_KEY)->label(__('Static error pages'))
+                    ->helperText(__('Serve the error and maintenance pages built in the Theme Builder from static files, without the database. Saving an error page refreshes its file.')),
             ])
             ->statePath('data')
-            ->submitAction('save');
+            ->submitAction('save')
+            ->footerActions(fn () => $this->getVisibleFooterActions());
+    }
+
+    /**
+     * The form has to be able to send itself: without a Save control nothing on
+     * this screen could be stored (Enter in a field does not submit it).
+     *
+     * @return array<Action>
+     */
+    protected function getFooterActions(): array
+    {
+        return [
+            Action::make('save')
+                ->label(__('primix::panel.actions.save'))
+                ->submit(),
+        ];
     }
 
     public function save(): void
@@ -96,8 +119,20 @@ class SiteSettings extends Page
      */
     public static function store(array $data): void
     {
-        foreach (Settings::KEYS as $key) {
+        // The static error pages mode is not a text setting: it also owns a marker
+        // file and the snapshots, so it goes through the snapshot service and is
+        // left alone when the form did not send it.
+        foreach (array_diff(Settings::KEYS, [ErrorPageSnapshot::SETTING_KEY]) as $key) {
             Settings::set($key, static::text($data[$key] ?? null));
+        }
+
+        if (array_key_exists(ErrorPageSnapshot::SETTING_KEY, $data)) {
+            $enabled = filter_var($data[ErrorPageSnapshot::SETTING_KEY], FILTER_VALIDATE_BOOLEAN);
+            $snapshot = app(ErrorPageSnapshot::class);
+
+            if ($enabled !== $snapshot->isEnabled()) {
+                $snapshot->setEnabled($enabled);
+            }
         }
     }
 

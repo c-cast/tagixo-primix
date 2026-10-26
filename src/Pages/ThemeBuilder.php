@@ -8,7 +8,9 @@ use Primix\Pages\Page;
 use Tagixo\PageBuilder\Builder\LayoutFrameBuilder;
 use Tagixo\PageBuilder\Facades\PageBuilder;
 use Tagixo\PageBuilder\Models\Layout;
+use Tagixo\PageBuilder\Services\ErrorPageSnapshot;
 use Tagixo\PageBuilder\Services\LayoutConditionService;
+use Tagixo\PageBuilder\Support\ErrorPages;
 use Tagixo\Primix\Resources\LayoutResource;
 use Tagixo\Primix\Resources\PageResource;
 
@@ -143,6 +145,39 @@ class ThemeBuilder extends Page
     public static function bodyUrl(Layout $layout): string
     {
         return route('tagixo-primix.templates.body', ['layout' => $layout->getKey()]);
+    }
+
+    /**
+     * The error pages of the site, one per HTTP status: whether each has been
+     * built, and the route that opens it — creating the page on the way, so an
+     * error page can exist before its first visit to the editor.
+     *
+     * @return list<array{status: int, label: string, configured: bool, exported: bool, url: string}>
+     */
+    public function errorPages(): array
+    {
+        $snapshot = app(ErrorPageSnapshot::class);
+        $pages = ErrorPages::all();
+
+        return array_map(
+            static fn (int $status): array => [
+                'status' => $status,
+                'label' => ErrorPages::label($status),
+                'configured' => ($pages[$status]?->rendered_html ?? '') !== '',
+                'exported' => $snapshot->has($status),
+                'url' => route('tagixo-primix.error-pages.edit', ['status' => $status]),
+            ],
+            ErrorPages::statuses(),
+        );
+    }
+
+    /**
+     * Whether error pages are served from static files, which is the mode that
+     * makes them safe while the database is down.
+     */
+    public function staticErrorPages(): bool
+    {
+        return app(ErrorPageSnapshot::class)->isEnabled();
     }
 
     public function conditionsSummary(Layout $layout): string
